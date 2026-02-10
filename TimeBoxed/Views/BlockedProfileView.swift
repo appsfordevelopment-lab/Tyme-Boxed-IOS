@@ -36,7 +36,6 @@ struct BlockedProfileView: View {
   @State private var enableAllowMode: Bool = false
   @State private var enableAllowModeDomain: Bool = false
   @State private var enableSafariBlocking: Bool = true
-  @State private var disableBackgroundStops: Bool = false
   @State private var domains: [String] = []
 
   @State private var physicalUnblockNFCTagId: String?
@@ -114,9 +113,6 @@ struct BlockedProfileView: View {
     )
     _enableReminder = State(
       initialValue: profile?.reminderTimeInSeconds != nil
-    )
-    _disableBackgroundStops = State(
-      initialValue: profile?.disableBackgroundStops ?? false
     )
     _reminderTimeInMinutes = State(
       initialValue: Int(profile?.reminderTimeInSeconds ?? 900) / 60
@@ -260,14 +256,6 @@ struct BlockedProfileView: View {
             description:
               "Block deleting apps from your phone, stops you from deleting Timeboxed to access apps",
             isOn: $enableStrictMode,
-            isDisabled: isBlocking
-          )
-
-          CustomToggle(
-            title: "Disable Background Stops",
-            description:
-              "Disable the ability to stop a profile from the background, this includes shortcuts and scanning links from NFC tags .",
-            isOn: $disableBackgroundStops,
             isDisabled: isBlocking
           )
         }
@@ -588,7 +576,7 @@ struct BlockedProfileView: View {
           physicalUnblockNFCTagId: physicalUnblockNFCTagId,
           physicalUnblockQRCodeId: physicalUnblockQRCodeId,
           schedule: schedule,
-          disableBackgroundStops: disableBackgroundStops
+          disableBackgroundStops: true
         )
 
         // Schedule restrictions
@@ -613,7 +601,7 @@ struct BlockedProfileView: View {
           physicalUnblockNFCTagId: physicalUnblockNFCTagId,
           physicalUnblockQRCodeId: physicalUnblockQRCodeId,
           schedule: schedule,
-          disableBackgroundStops: disableBackgroundStops
+          disableBackgroundStops: true
         )
 
         // Schedule restrictions

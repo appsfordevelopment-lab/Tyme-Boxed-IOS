@@ -14,8 +14,7 @@ struct OTPScreen: View {
 
   var body: some View {
     ZStack {
-      // Light grey background
-      Color(white: 0.95)
+      Color(uiColor: .systemBackground)
         .ignoresSafeArea()
 
       GeometryReader { geometry in
@@ -29,7 +28,7 @@ struct OTPScreen: View {
                 .frame(width: 40, height: 40)
                 .background(
                   Circle()
-                    .fill(Color(white: 0.85))
+                    .fill(Color(uiColor: .secondarySystemBackground))
                 )
             }
             .padding(.leading, 20)
@@ -104,17 +103,23 @@ struct OTPScreen: View {
             HStack {
               if authManager.isLoading {
                 ProgressView()
-                  .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                  .progressViewStyle(CircularProgressViewStyle(tint: Color(uiColor: .systemBackground)))
               }
               Text("Verify")
                 .font(.system(size: 16, weight: .semibold))
-                .foregroundColor(.white)
+                .foregroundColor(
+                  isOTPComplete() && !authManager.isLoading
+                    ? Color(uiColor: .systemBackground) : Color(uiColor: .tertiaryLabel)
+                )
             }
             .frame(maxWidth: .infinity)
             .frame(height: 56)
             .background(
               RoundedRectangle(cornerRadius: 12)
-                .fill(isOTPComplete() && !authManager.isLoading ? Color.black : Color(white: 0.85))
+                .fill(
+                  isOTPComplete() && !authManager.isLoading
+                    ? Color.primary : Color(uiColor: .tertiarySystemFill)
+                )
             )
           }
           .disabled(!isOTPComplete() || authManager.isLoading)
@@ -189,7 +194,7 @@ struct OTPScreen: View {
     .frame(width: 50, height: 60)
     .background(
       RoundedRectangle(cornerRadius: 12)
-        .fill(Color(white: 0.9))
+        .fill(Color(uiColor: .tertiarySystemFill))
         .overlay(
           RoundedRectangle(cornerRadius: 12)
             .stroke(shouldShowBorder ? Color.primary : Color.clear, lineWidth: 1)

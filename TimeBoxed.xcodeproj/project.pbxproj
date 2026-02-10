@@ -614,7 +614,7 @@
 				CODE_SIGN_ENTITLEMENTS = TimeBoxedDeviceMonitor/TimeBoxedDeviceMonitor.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = YR54789JNV;
+				DEVELOPMENT_TEAM = WDAD65SU4H;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = TimeBoxedDeviceMonitor/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = TimeBoxedDeviceMonitor;
@@ -647,7 +647,7 @@
 				CODE_SIGN_ENTITLEMENTS = TimeBoxedDeviceMonitor/TimeBoxedDeviceMonitor.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = YR54789JNV;
+				DEVELOPMENT_TEAM = WDAD65SU4H;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = TimeBoxedDeviceMonitor/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = TimeBoxedDeviceMonitor;
@@ -803,7 +803,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"TimeBoxed/Preview Content\"";
-				DEVELOPMENT_TEAM = YR54789JNV;
+				DEVELOPMENT_TEAM = WDAD65SU4H;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -851,7 +851,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"TimeBoxed/Preview Content\"";
-				DEVELOPMENT_TEAM = YR54789JNV;
+				DEVELOPMENT_TEAM = WDAD65SU4H;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -987,7 +987,7 @@
 				CODE_SIGN_ENTITLEMENTS = TimeBoxedShieldConfig/TimeBoxedShieldConfig.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = YR54789JNV;
+				DEVELOPMENT_TEAM = WDAD65SU4H;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = TimeBoxedShieldConfig/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = TimeBoxedShieldConfig;
@@ -1015,7 +1015,7 @@
 				CODE_SIGN_ENTITLEMENTS = TimeBoxedShieldConfig/TimeBoxedShieldConfig.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = YR54789JNV;
+				DEVELOPMENT_TEAM = WDAD65SU4H;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = TimeBoxedShieldConfig/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = TimeBoxedShieldConfig;
@@ -1046,7 +1046,7 @@
 				CODE_SIGN_ENTITLEMENTS = TimeBoxedWidget/TimeBoxedWidgetExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = YR54789JNV;
+				DEVELOPMENT_TEAM = WDAD65SU4H;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = TimeBoxedWidget/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = TimeBoxedWidget;
@@ -1076,7 +1076,7 @@
 				CODE_SIGN_ENTITLEMENTS = TimeBoxedWidget/TimeBoxedWidgetExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = YR54789JNV;
+				DEVELOPMENT_TEAM = WDAD65SU4H;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = TimeBoxedWidget/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = TimeBoxedWidget;

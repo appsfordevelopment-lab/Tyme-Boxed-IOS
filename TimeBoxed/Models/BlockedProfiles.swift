@@ -394,7 +394,8 @@ class BlockedProfiles {
       domains: source.domains,
       physicalUnblockNFCTagId: source.physicalUnblockNFCTagId,
       physicalUnblockQRCodeId: source.physicalUnblockQRCodeId,
-      schedule: source.schedule
+      schedule: source.schedule,
+      disableBackgroundStops: true
     )
 
     context.insert(cloned)

@@ -11,8 +11,7 @@ struct PermissionsScreen: View {
 
   var body: some View {
     ZStack {
-      // Light grey background
-      Color(white: 0.95)
+      Color(uiColor: .systemBackground)
         .ignoresSafeArea()
 
       GeometryReader { geometry in
@@ -24,11 +23,11 @@ struct PermissionsScreen: View {
                 Image(systemName: "chevron.left")
                   .font(.system(size: 16, weight: .semibold))
                   .foregroundColor(.primary)
-                  .frame(width: 40, height: 40)
-                  .background(
-                    Circle()
-                      .fill(Color(white: 0.85))
-                  )
+                .frame(width: 40, height: 40)
+                .background(
+                  Circle()
+                    .fill(Color(uiColor: .secondarySystemBackground))
+                )
               }
               .padding(.leading, 20)
               .padding(.top, 8)
@@ -107,12 +106,12 @@ struct PermissionsScreen: View {
             }) {
               Text("Allow access")
                 .font(.system(size: 16, weight: .semibold))
-                .foregroundColor(.white)
+                .foregroundColor(Color(uiColor: .systemBackground))
                 .frame(maxWidth: .infinity)
                 .frame(height: 56)
                 .background(
                   RoundedRectangle(cornerRadius: 12)
-                    .fill(Color.black)
+                    .fill(Color.primary)
                 )
             }
             .padding(.horizontal, 20)

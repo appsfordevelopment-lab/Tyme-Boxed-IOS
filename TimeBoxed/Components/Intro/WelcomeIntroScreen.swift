@@ -11,42 +11,32 @@ struct WelcomeIntroScreen: View {
       AsyncImage(url: URL(string: "https://images.unsplash.com/photo-1543297088-974cee3f2156?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MjB8fHBob25lJTIwbGFwdG9wfGVufDB8fDB8fHww")) { phase in
         switch phase {
         case .empty:
-          // Placeholder gradient while loading
-          LinearGradient(
-            gradient: Gradient(colors: [
-              Color(red: 0.15, green: 0.12, blue: 0.10),
-              Color(red: 0.20, green: 0.17, blue: 0.14)
-            ]),
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-          )
+          Color(uiColor: .systemBackground)
         case .success(let image):
           image
             .resizable()
             .scaledToFill()
         case .failure:
-          // Fallback gradient if image fails to load
-          LinearGradient(
-            gradient: Gradient(colors: [
-              Color(red: 0.15, green: 0.12, blue: 0.10),
-              Color(red: 0.20, green: 0.17, blue: 0.14)
-            ]),
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-          )
+          Color(uiColor: .systemBackground)
         @unknown default:
-          LinearGradient(
-            gradient: Gradient(colors: [
-              Color(red: 0.15, green: 0.12, blue: 0.10),
-              Color(red: 0.20, green: 0.17, blue: 0.14)
-            ]),
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-          )
+          Color(uiColor: .systemBackground)
         }
       }
       .frame(maxWidth: .infinity, maxHeight: .infinity)
       .clipped()
+      .ignoresSafeArea(.all)
+
+      // Gradient overlay so content is readable in both light and dark mode
+      VStack {
+        Spacer()
+        LinearGradient(
+          colors: [Color.clear, Color.black.opacity(0.75)],
+          startPoint: .top,
+          endPoint: .bottom
+        )
+        .frame(height: 420)
+      }
+      .frame(maxWidth: .infinity, maxHeight: .infinity)
       .ignoresSafeArea(.all)
 
       VStack(spacing: 0) {
@@ -55,14 +45,16 @@ struct WelcomeIntroScreen: View {
         // Title section
         VStack(alignment: .leading, spacing: 12) {
           Text("Your time is yours.")
-            .font(.system(size: 35,  ))
+            .font(.system(size: 35))
             .foregroundColor(.white)
+            .shadow(color: .black.opacity(0.4), radius: 2, x: 0, y: 1)
             .opacity(showContent ? 1 : 0)
             .offset(y: showContent ? 0 : -20)
 
           Text("Get back to moving.")
-            .font(.system(size: 35, ))
+            .font(.system(size: 35))
             .foregroundColor(.white)
+            .shadow(color: .black.opacity(0.4), radius: 2, x: 0, y: 1)
             .opacity(showContent ? 1 : 0)
             .offset(y: showContent ? 0 : -20)
         }
@@ -80,13 +72,13 @@ struct WelcomeIntroScreen: View {
               .frame(height: 56)
               .background(
                 RoundedRectangle(cornerRadius: 28)
-                  .fill(Color(white: 0.95))
+                  .fill(Color.white)
               )
           }
           .opacity(showContent ? 1 : 0)
           .offset(y: showContent ? 0 : 20)
 
-          // I don't have a Brick button
+          // I don't have a Time Boxed button
           Button(action: onSkipBrick) {
             Text("I don't have a Time Boxed")
               .font(.system(size: 20, weight: .semibold))
@@ -98,7 +90,7 @@ struct WelcomeIntroScreen: View {
                   .fill(Color.clear)
                   .overlay(
                     RoundedRectangle(cornerRadius: 28)
-                      .stroke(Color(white: 0.3), lineWidth: 1)
+                      .stroke(Color.white.opacity(0.6), lineWidth: 1)
                   )
               )
           }
@@ -113,20 +105,20 @@ struct WelcomeIntroScreen: View {
           HStack(spacing: 4) {
             Text("By continuing, you agree to our")
               .font(.system(size: 12))
-              .foregroundColor(Color(white: 1))
+              .foregroundColor(Color.white.opacity(0.9))
 
             Link("Terms", destination: URL(string: "https://timeboxed.app/terms")!)
               .font(.system(size: 12, weight: .medium))
-              .foregroundColor(Color(red: 0.85, green: 0.55, blue: 0.25))
+              .foregroundColor(Color(red: 1, green: 0.85, blue: 0.6))
               .underline()
 
             Text("and")
               .font(.system(size: 12))
-              .foregroundColor(Color(white: 0.5))
+              .foregroundColor(Color.white.opacity(0.7))
 
             Link("Privacy Policy", destination: URL(string: "https://timeboxed.app/privacy")!)
               .font(.system(size: 12, weight: .medium))
-              .foregroundColor(Color(red: 0.85, green: 0.55, blue: 0.25))
+              .foregroundColor(Color(red: 1, green: 0.85, blue: 0.6))
               .underline()
           }
         }

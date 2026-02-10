@@ -34,8 +34,7 @@ struct LoginScreen: View {
 
   var body: some View {
     ZStack {
-      // Light grey background
-      Color(white: 0.95)
+      Color(uiColor: .systemBackground)
         .ignoresSafeArea()
 
       VStack(spacing: 0) {
@@ -49,7 +48,7 @@ struct LoginScreen: View {
                 .frame(width: 40, height: 40)
                 .background(
                   Circle()
-                    .fill(Color(white: 0.85))
+                    .fill(Color(uiColor: .secondarySystemBackground))
                 )
             }
             .padding(.leading, 20)
@@ -98,7 +97,7 @@ struct LoginScreen: View {
             .padding(.vertical, 16)
             .background(
               RoundedRectangle(cornerRadius: 12)
-                .fill(Color(white: 0.9))
+                .fill(Color(uiColor: .tertiarySystemFill))
             )
             .contentShape(Rectangle())
           }
@@ -113,7 +112,7 @@ struct LoginScreen: View {
             .padding(16)
             .background(
               RoundedRectangle(cornerRadius: 12)
-                .fill(Color(white: 0.9))
+                .fill(Color(uiColor: .tertiarySystemFill))
             )
         }
         .padding(.horizontal, 20)
@@ -148,17 +147,23 @@ struct LoginScreen: View {
           HStack {
             if authManager.isLoading {
               ProgressView()
-                .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                .progressViewStyle(CircularProgressViewStyle(tint: Color(uiColor: .systemBackground)))
             }
             Text("Get verification code")
               .font(.system(size: 16, weight: .semibold))
-              .foregroundColor(isValidPhone(phone) && !authManager.isLoading ? .white : Color(white: 0.5))
+              .foregroundColor(
+                isValidPhone(phone) && !authManager.isLoading
+                  ? Color(uiColor: .systemBackground) : Color(uiColor: .tertiaryLabel)
+              )
           }
           .frame(maxWidth: .infinity)
           .frame(height: 56)
           .background(
             RoundedRectangle(cornerRadius: 12)
-              .fill(isValidPhone(phone) && !authManager.isLoading ? Color.black : Color(white: 0.85))
+              .fill(
+                isValidPhone(phone) && !authManager.isLoading
+                  ? Color.primary : Color(uiColor: .tertiarySystemFill)
+              )
           )
         }
         .disabled(!isValidPhone(phone) || authManager.isLoading)
