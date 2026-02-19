@@ -18,9 +18,6 @@ struct AnimatedIntroContainer: View {
               handleNext()
             },
             onSkipBrick: {
-              handleNext()
-            },
-            onContinueAsGuest: {
               handleContinueAsGuest()
             }
           )
@@ -48,9 +45,6 @@ struct AnimatedIntroContainer: View {
               handleNext()
             },
             onSkipBrick: {
-              handleNext()
-            },
-            onContinueAsGuest: {
               handleContinueAsGuest()
             }
           )

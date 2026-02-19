@@ -1,11 +1,9 @@
 import SwiftUI
 
 struct WelcomeIntroScreen: View {
-  @Environment(\.openURL) private var openURL
   @State private var showContent: Bool = false
   let onContinueWithEmail: () -> Void
   let onSkipBrick: () -> Void
-  let onContinueAsGuest: () -> Void
 
   var body: some View {
     ZStack {
@@ -67,7 +65,7 @@ struct WelcomeIntroScreen: View {
         VStack(spacing: 16) {
           // Continue with email button
           Button(action: onContinueWithEmail) {
-            Text("Continue ")
+            Text("Continue with phone number")
               .font(.system(size: 20, weight: .semibold))
               .foregroundColor(.black)
               .frame(maxWidth: 350)
@@ -80,11 +78,9 @@ struct WelcomeIntroScreen: View {
           .opacity(showContent ? 1 : 0)
           .offset(y: showContent ? 0 : 20)
 
-          // I don't have a Tyme Boxed button
-          Button {
-            openURL(URL(string: "https://www.tymeboxed.app/preorder")!)
-          } label: {
-            Text("I don't have a Tyme Boxed")
+          // Continue as guest button
+          Button(action: onSkipBrick) {
+            Text("Continue as guest")
               .font(.system(size: 20, weight: .semibold))
               .foregroundColor(.white)
               .frame(maxWidth: 350)
@@ -97,15 +93,6 @@ struct WelcomeIntroScreen: View {
                       .stroke(Color.white.opacity(0.6), lineWidth: 1)
                   )
               )
-          }
-          .opacity(showContent ? 1 : 0)
-          .offset(y: showContent ? 0 : 20)
-
-          // Continue as guest button
-          Button(action: onContinueAsGuest) {
-            Text("Continue as guest")
-              .font(.system(size: 16, weight: .medium))
-              .foregroundColor(Color.white.opacity(0.9))
           }
           .opacity(showContent ? 1 : 0)
           .offset(y: showContent ? 0 : 20)
@@ -151,7 +138,6 @@ struct WelcomeIntroScreen: View {
 #Preview {
   WelcomeIntroScreen(
     onContinueWithEmail: { print("Continue with email") },
-    onSkipBrick: { print("Skip Brick") },
-    onContinueAsGuest: { print("Continue as guest") }
+    onSkipBrick: { print("Skip Brick") }
   )
 }
