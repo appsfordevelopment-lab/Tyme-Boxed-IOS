@@ -19,6 +19,9 @@ struct AnimatedIntroContainer: View {
             },
             onSkipBrick: {
               handleNext()
+            },
+            onContinueAsGuest: {
+              handleContinueAsGuest()
             }
           )
         case 1:
@@ -46,6 +49,9 @@ struct AnimatedIntroContainer: View {
             },
             onSkipBrick: {
               handleNext()
+            },
+            onContinueAsGuest: {
+              handleContinueAsGuest()
             }
           )
         }
@@ -87,6 +93,13 @@ struct AnimatedIntroContainer: View {
 
   private func handleLoginSuccess() {
     // After successful OTP login, navigate to permissions screen
+    withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+      currentStep = 2
+    }
+  }
+
+  private func handleContinueAsGuest() {
+    // Bypass login and go directly to permissions screen
     withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
       currentStep = 2
     }
