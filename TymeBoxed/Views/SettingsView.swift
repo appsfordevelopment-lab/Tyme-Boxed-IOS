@@ -55,17 +55,17 @@ struct SettingsView: View {
 
 
 
-        Section("Help") {
-          Link(destination: URL(string: "https://www.timeboxed.app/blocking-native-apps.html")!) {
-            HStack {
-              Text("Blocking Native Apps")
-                .foregroundColor(.primary)
-              Spacer()
-              Image(systemName: "arrow.up.right.square")
-                .foregroundColor(.secondary)
-            }
-          }
-        }
+        // Section("Help") {
+        //   Link(destination: URL(string: "https://www.timeboxed.app/blocking-native-apps.html")!) {
+        //     HStack {
+        //       Text("Blocking Native Apps")
+        //         .foregroundColor(.primary)
+        //       Spacer()
+        //       Image(systemName: "arrow.up.right.square")
+        //         .foregroundColor(.secondary)
+        //     }
+        //   }
+        // }
 
         if !strategyManager.isBlocking {
           Section("Troubleshooting") {
