@@ -10,6 +10,7 @@ class NFCBlockingStrategy: BlockingStrategy {
   var iconType: String = "wave.3.right.circle.fill"
   var color: Color = .yellow
 
+  var usesNFC: Bool = true
   var hidden: Bool = false
 
   var onSessionCreation: ((SessionStatus) -> Void)?

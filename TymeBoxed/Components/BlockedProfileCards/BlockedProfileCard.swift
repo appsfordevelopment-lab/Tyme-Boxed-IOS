@@ -18,6 +18,15 @@ struct BlockedProfileCard: View {
   var onStatsTapped: () -> Void = {}
   var onBreakTapped: () -> Void
 
+  var isPauseActive: Bool = false
+
+  private var stopMenuTitle: String {
+    if profile.blockingStrategyId == NFCPauseTimerBlockingStrategy.id {
+      return isPauseActive ? "End" : "Stop"  // "Stop" before pause scan, "End" when paused
+    }
+    return "Stop"
+  }
+
   // Keep a reference to the CardBackground to access color
   private var cardBackground: CardBackground {
     CardBackground(isActive: isActive, customColor: themeManager.themeColor)
@@ -71,7 +80,7 @@ struct BlockedProfileCard: View {
                 UIImpactFeedbackGenerator(style: .light).impactOccurred()
                 onStopTapped()
               }) {
-                Label("Stop", systemImage: "stop.fill")
+                Label(stopMenuTitle, systemImage: "stop.fill")
               }
             } else {
               Button(action: {
@@ -127,6 +136,7 @@ struct BlockedProfileCard: View {
           isBreakAvailable: isBreakAvailable,
           isBreakActive: isBreakActive,
           elapsedTime: elapsedTime,
+          stopButtonTitle: stopMenuTitle,
           onStartTapped: onStartTapped,
           onStopTapped: onStopTapped,
           onBreakTapped: onBreakTapped

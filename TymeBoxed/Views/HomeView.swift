@@ -121,6 +121,7 @@ struct HomeView: View {
             isBlocking: isBlocking,
             isBreakAvailable: isBreakAvailable,
             isBreakActive: isBreakActive,
+            isPauseActive: strategyManager.isPauseActive,
             activeSessionProfileId: activeSessionProfileId,
             elapsedTime: strategyManager.elapsedTime,
             startingProfileId: navigateToProfileId,

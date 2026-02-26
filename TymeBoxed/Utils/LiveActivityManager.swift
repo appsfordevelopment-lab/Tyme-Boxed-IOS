@@ -85,7 +85,10 @@ class LiveActivityManager: ObservableObject {
       startTime: session.startTime,
       isBreakActive: session.isBreakActive,
       breakStartTime: session.breakStartTime,
-      breakEndTime: session.breakEndTime
+      breakEndTime: session.breakEndTime,
+      isPauseActive: session.isPauseActive,
+      pauseStartTime: session.pauseStartTime,
+      pauseDurationInMinutes: getPauseDuration(from: session)
     )
 
     do {
@@ -115,7 +118,10 @@ class LiveActivityManager: ObservableObject {
       startTime: session.startTime,
       isBreakActive: session.isBreakActive,
       breakStartTime: session.breakStartTime,
-      breakEndTime: session.breakEndTime
+      breakEndTime: session.breakEndTime,
+      isPauseActive: session.isPauseActive,
+      pauseStartTime: session.pauseStartTime,
+      pauseDurationInMinutes: getPauseDuration(from: session)
     )
 
     Task {
@@ -123,6 +129,35 @@ class LiveActivityManager: ObservableObject {
       await activity.update(content)
       print("Updated Live Activity with ID: \(activity.id)")
     }
+  }
+
+  func updatePauseState(session: BlockedProfileSession) {
+    guard let activity = currentActivity else {
+      print("No Live Activity to update for pause state")
+      return
+    }
+
+    let updatedState = TymeBoxedWidgetAttributes.ContentState(
+      startTime: session.startTime,
+      isBreakActive: session.isBreakActive,
+      breakStartTime: session.breakStartTime,
+      breakEndTime: session.breakEndTime,
+      isPauseActive: session.isPauseActive,
+      pauseStartTime: session.pauseStartTime,
+      pauseDurationInMinutes: getPauseDuration(from: session)
+    )
+
+    Task {
+      let content = ActivityContent(state: updatedState, staleDate: nil)
+      await activity.update(content)
+      print("Updated Live Activity pause state: \(session.isPauseActive)")
+    }
+  }
+
+  private func getPauseDuration(from session: BlockedProfileSession) -> Int? {
+    guard let data = session.blockedProfile.strategyData else { return nil }
+    let pauseData = StrategyPauseTimerData.toStrategyPauseTimerData(from: data)
+    return pauseData.pauseDurationInMinutes
   }
 
   func updateBreakState(session: BlockedProfileSession) {
@@ -135,7 +170,10 @@ class LiveActivityManager: ObservableObject {
       startTime: session.startTime,
       isBreakActive: session.isBreakActive,
       breakStartTime: session.breakStartTime,
-      breakEndTime: session.breakEndTime
+      breakEndTime: session.breakEndTime,
+      isPauseActive: session.isPauseActive,
+      pauseStartTime: session.pauseStartTime,
+      pauseDurationInMinutes: getPauseDuration(from: session)
     )
 
     Task {

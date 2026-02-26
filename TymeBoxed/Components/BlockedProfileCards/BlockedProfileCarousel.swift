@@ -6,6 +6,7 @@ struct BlockedProfileCarousel: View {
   let isBlocking: Bool
   let isBreakAvailable: Bool
   let isBreakActive: Bool
+  let isPauseActive: Bool
   let activeSessionProfileId: UUID?
   let elapsedTime: TimeInterval
   let startingProfileId: UUID?
@@ -50,6 +51,7 @@ struct BlockedProfileCarousel: View {
     isBlocking: Bool,
     isBreakAvailable: Bool,
     isBreakActive: Bool,
+    isPauseActive: Bool = false,
     activeSessionProfileId: UUID?,
     elapsedTime: TimeInterval,
     startingProfileId: UUID? = nil,
@@ -65,6 +67,7 @@ struct BlockedProfileCarousel: View {
     self.isBlocking = isBlocking
     self.isBreakAvailable = isBreakAvailable
     self.isBreakActive = isBreakActive
+    self.isPauseActive = isPauseActive
     self.activeSessionProfileId = activeSessionProfileId
     self.elapsedTime = elapsedTime
     self.startingProfileId = startingProfileId
@@ -104,120 +107,8 @@ struct BlockedProfileCarousel: View {
 
   var body: some View {
     VStack(alignment: .leading, spacing: 10) {
-
-      SectionTitle(
-        titleMessage,
-        buttonText: actionButtonText,
-        buttonAction: {
-          actionButtonAction()
-        },
-        buttonIcon: actionButtonIcon
-      )
-      .padding(.horizontal, 16)
-
-      VStack(spacing: 16) {
-        // Card carousel
-        ZStack {
-          // Carousel container
-          GeometryReader { geometry in
-            let cardWidth = geometry.size.width - 32  // Padding on sides
-
-            HStack(spacing: cardSpacing) {
-              ForEach(profiles.indices, id: \.self) { index in
-                BlockedProfileCard(
-                  profile: profiles[index],
-                  isActive: profiles[index].id
-                    == activeSessionProfileId,
-                  isBreakAvailable: isBreakAvailable,
-                  isBreakActive: isBreakActive,
-                  elapsedTime: elapsedTime,
-                  onStartTapped: {
-                    onStartTapped(profiles[index])
-                  },
-                  onStopTapped: {
-                    onStopTapped(profiles[index])
-                  },
-                  onEditTapped: {
-                    onEditTapped(profiles[index])
-                  },
-                  onStatsTapped: {
-                    onStatsTapped(profiles[index])
-                  },
-                  onBreakTapped: {
-                    onBreakTapped(profiles[index])
-                  }
-                )
-                .frame(width: cardWidth)
-              }
-            }
-            .offset(
-              x: calculateOffset(
-                geometry: geometry,
-                cardWidth: cardWidth
-              )
-            )
-            .animation(
-              .spring(response: 0.4, dampingFraction: 0.8),
-              value: currentIndex
-            )
-            .animation(
-              .spring(response: 0.4, dampingFraction: 0.8),
-              value: dragOffset
-            )
-            .gesture(
-              DragGesture()
-                .onChanged { value in
-                  if !isBlocking {  // Only allow dragging when not blocking
-                    dragOffset = value.translation.width
-                  }
-                }
-                .onEnded { value in
-                  if !isBlocking {  // Only allow dragging when not blocking
-                    let offsetAmount = value.translation
-                      .width
-                    let swipedRight =
-                      offsetAmount > dragThreshold
-                    let swipedLeft =
-                      offsetAmount < -dragThreshold
-
-                    if swipedLeft
-                      && currentIndex < profiles.count - 1
-                    {
-                      currentIndex += 1
-                    } else if swipedRight
-                      && currentIndex > 0
-                    {
-                      currentIndex -= 1
-                    }
-
-                    dragOffset = 0
-                  }
-                }
-            )
-          }
-        }
-        .frame(height: cardHeight)
-        .padding(.bottom, 10)
-
-        // Page indicator dots
-        HStack(spacing: 8) {
-          if !isBlocking && profiles.count > 1 {
-            ForEach(0..<profiles.count, id: \.self) { index in
-              Circle()
-                .fill(
-                  index == currentIndex
-                    ? Color.primary
-                    : Color.secondary.opacity(0.3)
-                )
-                .frame(width: 8, height: 8)
-                .animation(.easeInOut, value: currentIndex)
-            }
-          }
-        }
-        .frame(height: 8)
-        .opacity(!isBlocking && profiles.count > 1 ? 1 : 0)
-        .animation(.easeInOut, value: isBlocking)
-      }
+      sectionHeader
+      carouselContent
     }
     .onAppear {
       initialSetup()
@@ -231,6 +122,110 @@ struct BlockedProfileCarousel: View {
     .onChange(of: startingProfileId) { _, _ in
       initialSetup()
     }
+  }
+
+  private var sectionHeader: some View {
+    SectionTitle(
+      titleMessage,
+      buttonText: actionButtonText,
+      buttonAction: { actionButtonAction() },
+      buttonIcon: actionButtonIcon
+    )
+    .padding(.horizontal, 16)
+  }
+
+  private var carouselContent: some View {
+    VStack(spacing: 16) {
+      cardCarousel
+      pageIndicator
+    }
+  }
+
+  private var cardCarousel: some View {
+    ZStack {
+      GeometryReader { geometry in
+        let cardWidth = geometry.size.width - 32
+        carouselHStack(cardWidth: cardWidth, geometry: geometry)
+      }
+    }
+    .frame(height: cardHeight)
+    .padding(.bottom, 10)
+  }
+
+  private func carouselHStack(
+    cardWidth: CGFloat,
+    geometry: GeometryProxy
+  ) -> some View {
+    HStack(spacing: cardSpacing) {
+      ForEach(profiles.indices, id: \.self) { index in
+        profileCard(for: index, cardWidth: cardWidth)
+      }
+    }
+    .offset(x: calculateOffset(geometry: geometry, cardWidth: cardWidth))
+    .animation(.spring(response: 0.4, dampingFraction: 0.8), value: currentIndex)
+    .animation(.spring(response: 0.4, dampingFraction: 0.8), value: dragOffset)
+    .gesture(dragGesture)
+  }
+
+  private func profileCard(for index: Int, cardWidth: CGFloat) -> some View {
+    let profile = profiles[index]
+    return BlockedProfileCard(
+      profile: profile,
+      isActive: profile.id == activeSessionProfileId,
+      isBreakAvailable: isBreakAvailable,
+      isBreakActive: isBreakActive,
+      elapsedTime: elapsedTime,
+      onStartTapped: { onStartTapped(profile) },
+      onStopTapped: { onStopTapped(profile) },
+      onEditTapped: { onEditTapped(profile) },
+      onStatsTapped: { onStatsTapped(profile) },
+      onBreakTapped: { onBreakTapped(profile) },
+      isPauseActive: isPauseActive
+    )
+    .frame(width: cardWidth)
+  }
+
+  private var dragGesture: some Gesture {
+    DragGesture()
+      .onChanged { value in
+        if !isBlocking {
+          dragOffset = value.translation.width
+        }
+      }
+      .onEnded { value in
+        if !isBlocking {
+          let offsetAmount = value.translation.width
+          let swipedLeft = offsetAmount < -dragThreshold
+          let swipedRight = offsetAmount > dragThreshold
+
+          if swipedLeft && currentIndex < profiles.count - 1 {
+            currentIndex += 1
+          } else if swipedRight && currentIndex > 0 {
+            currentIndex -= 1
+          }
+          dragOffset = 0
+        }
+      }
+  }
+
+  private var pageIndicator: some View {
+    HStack(spacing: 8) {
+      if !isBlocking && profiles.count > 1 {
+        ForEach(0..<profiles.count, id: \.self) { index in
+          Circle()
+            .fill(
+              index == currentIndex
+                ? Color.primary
+                : Color.secondary.opacity(0.3)
+            )
+            .frame(width: 8, height: 8)
+            .animation(.easeInOut, value: currentIndex)
+        }
+      }
+    }
+    .frame(height: 8)
+    .opacity(!isBlocking && profiles.count > 1 ? 1 : 0)
+    .animation(.easeInOut, value: isBlocking)
   }
 
   // Calculate the offset based on current index and drag

@@ -18,6 +18,28 @@ struct TymeBoxedWidgetAttributes: ActivityAttributes {
     var breakStartTime: Date?
     var breakEndTime: Date?
 
+    var isPauseActive: Bool = false
+    var pauseStartTime: Date?
+    var pauseDurationInMinutes: Int?
+
+    init(
+      startTime: Date,
+      isBreakActive: Bool = false,
+      breakStartTime: Date? = nil,
+      breakEndTime: Date? = nil,
+      isPauseActive: Bool = false,
+      pauseStartTime: Date? = nil,
+      pauseDurationInMinutes: Int? = nil
+    ) {
+      self.startTime = startTime
+      self.isBreakActive = isBreakActive
+      self.breakStartTime = breakStartTime
+      self.breakEndTime = breakEndTime
+      self.isPauseActive = isPauseActive
+      self.pauseStartTime = pauseStartTime
+      self.pauseDurationInMinutes = pauseDurationInMinutes
+    }
+
     func getTimeIntervalSinceNow() -> Double {
       // Calculate the break duration to subtract from elapsed time
       let breakDuration = calculateBreakDuration()
@@ -76,7 +98,17 @@ struct TymeBoxedWidgetLiveActivity: Widget {
 
         // Right side - Timer or break indicator
         VStack(alignment: .trailing, spacing: 4) {
-          if context.state.isBreakActive {
+          if context.state.isPauseActive {
+            HStack(spacing: 6) {
+              Image(systemName: "pause.circle.fill")
+                .font(.title2)
+                .foregroundColor(.orange)
+              Text("Paused")
+                .font(.subheadline)
+                .fontWeight(.semibold)
+                .foregroundColor(.orange)
+            }
+          } else if context.state.isBreakActive {
             HStack(spacing: 6) {
               Image(systemName: "cup.and.heat.waves.fill")
                 .font(.title2)
@@ -120,7 +152,17 @@ struct TymeBoxedWidgetLiveActivity: Widget {
               .foregroundColor(.secondary)
               .multilineTextAlignment(.center)
 
-            if context.state.isBreakActive {
+            if context.state.isPauseActive {
+              VStack(spacing: 2) {
+                Image(systemName: "pause.circle.fill")
+                  .font(.title2)
+                  .foregroundColor(.orange)
+                Text("Paused")
+                  .font(.subheadline)
+                  .fontWeight(.semibold)
+                  .foregroundColor(.orange)
+              }
+            } else if context.state.isBreakActive {
               VStack(spacing: 2) {
                 Image(systemName: "cup.and.heat.waves.fill")
                   .font(.title2)

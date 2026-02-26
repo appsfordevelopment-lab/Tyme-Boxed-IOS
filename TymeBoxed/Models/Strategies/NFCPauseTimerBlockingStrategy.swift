@@ -1,17 +1,17 @@
 import SwiftData
 import SwiftUI
 
-class NFCTimerBlockingStrategy: BlockingStrategy {
-  static var id: String = "NFCTimerBlockingStrategy"
+class NFCPauseTimerBlockingStrategy: BlockingStrategy {
+  static var id: String = "NFCPauseTimerBlockingStrategy"
 
-  var name: String = "NFC + Timer"
-  var description: String = "Set a focus duration, then scan any NFC tag to stop early."
-  var iconType: String = "alarm.waves.left.and.right"
-  var color: Color = .mint
+  var name: String = "NFC + Pause Timer"
+  var description: String =
+    "Set a pause duration, scan once to pause, and scan again to fully end."
+  var iconType: String = "pause.circle"
+  var color: Color = .orange
 
   var usesNFC: Bool = true
-  var hasTimer: Bool = true
-
+  var hasPauseMode: Bool = true
   var hidden: Bool = false
 
   var onSessionCreation: ((SessionStatus) -> Void)?
@@ -21,7 +21,7 @@ class NFCTimerBlockingStrategy: BlockingStrategy {
   private let appBlocker: AppBlockerUtil = AppBlockerUtil()
 
   func getIdentifier() -> String {
-    return NFCTimerBlockingStrategy.id
+    return NFCPauseTimerBlockingStrategy.id
   }
 
   func startBlocking(
@@ -29,13 +29,14 @@ class NFCTimerBlockingStrategy: BlockingStrategy {
     profile: BlockedProfiles,
     forceStart: Bool?
   ) -> (any View)? {
-    return TimerDurationView(
+    return PauseDurationView(
       profileName: profile.name,
-      onDurationSelected: { duration in
-        if let strategyTimerData = StrategyTimerData.toData(from: duration) {
-          // Store the timer data so that its selected for the next time the profile is started
-          // This is also useful if the profile is started from the background like a shortcut or intent
-          profile.strategyData = strategyTimerData
+      onDurationSelected: { pauseDurationMinutes in
+        let pauseTimerData = StrategyPauseTimerData(
+          pauseDurationInMinutes: pauseDurationMinutes
+        )
+        if let data = StrategyPauseTimerData.toData(from: pauseTimerData) {
+          profile.strategyData = data
           profile.updatedAt = Date()
           BlockedProfiles.updateSnapshot(for: profile)
           try? context.save()
@@ -45,12 +46,10 @@ class NFCTimerBlockingStrategy: BlockingStrategy {
 
         let activeSession = BlockedProfileSession.createSession(
           in: context,
-          withTag: NFCTimerBlockingStrategy.id,
+          withTag: NFCPauseTimerBlockingStrategy.id,
           withProfile: profile,
           forceStart: forceStart ?? false
         )
-
-        DeviceActivityCenterUtil.startStrategyTimerActivity(for: profile)
 
         self.onSessionCreation?(.started(activeSession))
       }
@@ -61,6 +60,8 @@ class NFCTimerBlockingStrategy: BlockingStrategy {
     context: ModelContext,
     session: BlockedProfileSession
   ) -> (any View)? {
+    let isPauseActive = session.isPauseActive
+
     nfcScanner.onTagScanned = { tag in
       let tagId = tag.url ?? tag.id
 
@@ -80,14 +81,29 @@ class NFCTimerBlockingStrategy: BlockingStrategy {
           )
           return
         }
-        session.endSession()
-        try? context.save()
-        self.appBlocker.deactivateRestrictions()
-        self.onSessionCreation?(.ended(session.blockedProfile))
+
+        if isPauseActive {
+          DeviceActivityCenterUtil.removePauseTimerActivity(for: session.blockedProfile)
+          session.endSession()
+          try? context.save()
+          self.appBlocker.deactivateRestrictions()
+          self.onSessionCreation?(.ended(session.blockedProfile))
+        } else {
+          // First scan: unblock apps immediately, timer keeps running for pause duration
+          SharedData.resetPause()
+          SharedData.setPauseStartTime(date: Date())
+          self.appBlocker.deactivateRestrictions()
+          DeviceActivityCenterUtil.startPauseTimerActivity(for: session.blockedProfile)
+          self.onSessionCreation?(.paused)
+        }
       }
     }
 
-    nfcScanner.scan(profileName: session.blockedProfile.name)
+    if isPauseActive {
+      nfcScanner.scan(profileName: session.blockedProfile.name)
+    } else {
+      nfcScanner.scan(profileName: "\(session.blockedProfile.name) - Pause")
+    }
 
     return nil
   }

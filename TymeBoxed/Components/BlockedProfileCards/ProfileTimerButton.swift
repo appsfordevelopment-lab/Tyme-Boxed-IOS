@@ -10,10 +10,32 @@ struct ProfileTimerButton: View {
 
   let elapsedTime: TimeInterval?
 
+  let stopButtonTitle: String
+
   let onStartTapped: () -> Void
   let onStopTapped: () -> Void
 
   let onBreakTapped: () -> Void
+
+  init(
+    isActive: Bool,
+    isBreakAvailable: Bool,
+    isBreakActive: Bool,
+    elapsedTime: TimeInterval? = nil,
+    stopButtonTitle: String = "Stop",
+    onStartTapped: @escaping () -> Void,
+    onStopTapped: @escaping () -> Void,
+    onBreakTapped: @escaping () -> Void
+  ) {
+    self.isActive = isActive
+    self.isBreakAvailable = isBreakAvailable
+    self.isBreakActive = isBreakActive
+    self.elapsedTime = elapsedTime
+    self.stopButtonTitle = stopButtonTitle
+    self.onStartTapped = onStartTapped
+    self.onStopTapped = onStopTapped
+    self.onBreakTapped = onBreakTapped
+  }
 
   var breakMessage: String {
     return "Hold to" + (isBreakActive ? " Stop Break" : " Start Break")
@@ -50,9 +72,9 @@ struct ProfileTimerButton: View {
               )
           )
 
-          // Stop button
+          // Stop/End button
           GlassButton(
-            title: "Stop",
+            title: stopButtonTitle,
             icon: "stop.fill",
             fullWidth: false,
             equalWidth: true

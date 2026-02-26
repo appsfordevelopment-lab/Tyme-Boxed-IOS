@@ -55,6 +55,9 @@ enum SharedData {
     var breakStartTime: Date?
     var breakEndTime: Date?
 
+    var pauseStartTime: Date?
+    var pauseEndTime: Date?
+
     var forceStarted: Bool
   }
 
@@ -125,6 +128,11 @@ enum SharedData {
       tag: profileID.uuidString,
       blockedProfileId: profileID,
       startTime: Date(),
+      endTime: nil,
+      breakStartTime: nil,
+      breakEndTime: nil,
+      pauseStartTime: nil,
+      pauseEndTime: nil,
       forceStarted: true)
   }
 
@@ -163,6 +171,25 @@ enum SharedData {
 
   static func setBreakEndTime(date: Date) {
     activeSharedSession?.breakEndTime = date
+  }
+
+  static func setPauseStartTime(date: Date) {
+    guard var session = activeSharedSession else { return }
+    session.pauseStartTime = date
+    activeSharedSession = session
+  }
+
+  static func setPauseEndTime(date: Date) {
+    guard var session = activeSharedSession else { return }
+    session.pauseEndTime = date
+    activeSharedSession = session
+  }
+
+  static func resetPause() {
+    guard var session = activeSharedSession else { return }
+    session.pauseStartTime = nil
+    session.pauseEndTime = nil
+    activeSharedSession = session
   }
 
   static func setEndTime(date: Date) {

@@ -238,6 +238,8 @@ struct ProfileWidgetEntryView: View {
       endTime: nil,
       breakStartTime: nil,  // No break active
       breakEndTime: nil,
+      pauseStartTime: nil,
+      pauseEndTime: nil,
       forceStarted: true
     ),
     profileSnapshot: SharedData.ProfileSnapshot(
@@ -281,6 +283,8 @@ struct ProfileWidgetEntryView: View {
       endTime: nil,
       breakStartTime: Date(timeIntervalSinceNow: -60),  // Break started 1 minute ago
       breakEndTime: nil,
+      pauseStartTime: nil,
+      pauseEndTime: nil,
       forceStarted: true
     ),
     profileSnapshot: SharedData.ProfileSnapshot(
@@ -336,6 +340,8 @@ struct ProfileWidgetEntryView: View {
       endTime: nil,
       breakStartTime: nil,
       breakEndTime: nil,
+      pauseStartTime: nil,
+      pauseEndTime: nil,
       forceStarted: true
     ),
     profileSnapshot: SharedData.ProfileSnapshot(

@@ -10,6 +10,7 @@ class StrategyManager: ObservableObject {
     NFCBlockingStrategy(),
     NFCManualBlockingStrategy(),
     NFCTimerBlockingStrategy(),
+    NFCPauseTimerBlockingStrategy(),
     ShortcutTimerBlockingStrategy(),
   ]
 
@@ -45,6 +46,10 @@ class StrategyManager: ObservableObject {
 
   var isBreakAvailable: Bool {
     return activeSession?.isBreakAvailable ?? false
+  }
+
+  var isPauseActive: Bool {
+    return activeSession?.isPauseActive == true
   }
 
   func defaultReminderMessage(forProfile profile: BlockedProfiles?) -> String {
@@ -93,11 +98,24 @@ class StrategyManager: ObservableObject {
     }
   }
 
+  private func getPauseDurationInSeconds(for profile: BlockedProfiles) -> TimeInterval {
+    guard let strategyData = profile.strategyData else {
+      return TimeInterval(15 * 60)
+    }
+    let pauseData = StrategyPauseTimerData.toStrategyPauseTimerData(from: strategyData)
+    return TimeInterval(pauseData.pauseDurationInMinutes * 60)
+  }
+
   func startTimer() {
     timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
       guard let session = self.activeSession else { return }
 
-      if session.isBreakActive {
+      if self.isPauseActive {
+        guard let pauseStartTime = session.pauseStartTime else { return }
+        let timeSincePauseStart = Date().timeIntervalSince(pauseStartTime)
+        let pauseDurationInSeconds = self.getPauseDurationInSeconds(for: session.blockedProfile)
+        self.elapsedTime = max(0, pauseDurationInSeconds - timeSincePauseStart)
+      } else if session.isBreakActive {
         // Calculate break time remaining (countdown)
         guard let breakStartTime = session.breakStartTime else { return }
         let timeSinceBreakStart = Date().timeIntervalSince(breakStartTime)
@@ -155,7 +173,7 @@ class StrategyManager: ObservableObject {
         return
       }
 
-      let manualStrategy = getStrategy(id: ManualBlockingStrategy.id)
+      let manualStrategy = getStrategy(id: ManualBlockingStrategy.id, context: context)
 
       if let localActiveSession = getActiveSession(context: context) {
         if localActiveSession.blockedProfile.disableBackgroundStops {
@@ -236,14 +254,15 @@ class StrategyManager: ObservableObject {
           try context.save()
         }
 
-        let shortcutTimerStrategy = getStrategy(id: ShortcutTimerBlockingStrategy.id)
+        let shortcutTimerStrategy = getStrategy(
+          id: ShortcutTimerBlockingStrategy.id, context: context)
         _ = shortcutTimerStrategy.startBlocking(
           context: context,
           profile: profile,
           forceStart: true
         )
       } else {
-        let manualStrategy = getStrategy(id: ManualBlockingStrategy.id)
+        let manualStrategy = getStrategy(id: ManualBlockingStrategy.id, context: context)
         _ = manualStrategy.startBlocking(
           context: context,
           profile: profile,
@@ -271,7 +290,7 @@ class StrategyManager: ObservableObject {
         return
       }
 
-      let manualStrategy = getStrategy(id: ManualBlockingStrategy.id)
+      let manualStrategy = getStrategy(id: ManualBlockingStrategy.id, context: context)
 
       guard let localActiveSession = getActiveSession(context: context) else {
         print(
@@ -323,7 +342,7 @@ class StrategyManager: ObservableObject {
     }
 
     // Stop the active session using the manual strategy, by passes any other strategy in view
-    let manualStrategy = getStrategy(id: ManualBlockingStrategy.id)
+        let manualStrategy = getStrategy(id: ManualBlockingStrategy.id, context: context)
     _ = manualStrategy.stopBlocking(
       context: context,
       session: activeSession
@@ -402,16 +421,18 @@ class StrategyManager: ObservableObject {
     }
   }
 
-  func getStrategy(id: String) -> BlockingStrategy {
+  private func getStrategy(id: String, context: ModelContext) -> BlockingStrategy {
     var strategy = StrategyManager.getStrategyFromId(id: id)
 
-    strategy.onSessionCreation = { session in
+    strategy.onSessionCreation = { [self] session in
       self.dismissView()
 
       // Remove any timers and notifications that were scheduled
       self.timersUtil.cancelAll()
 
       switch session {
+      case .paused:
+        self.handlePauseStarted(context: context)
       case .started(let session):
         // Update the snapshot of the profile in case some settings were changed
         BlockedProfiles.updateSnapshot(for: session.blockedProfile)
@@ -441,6 +462,9 @@ class StrategyManager: ObservableObject {
 
         // Remove all strategy timer activities
         DeviceActivityCenterUtil.removeAllStrategyTimerActivities()
+
+        // Remove all pause timer activities
+        DeviceActivityCenterUtil.removeAllPauseTimerActivities()
       }
     }
 
@@ -451,6 +475,14 @@ class StrategyManager: ObservableObject {
     }
 
     return strategy
+  }
+
+  private func handlePauseStarted(context: ModelContext) {
+    loadActiveSession(context: context)
+    WidgetCenter.shared.reloadTimelines(ofKind: "ProfileControlWidget")
+    if let session = activeSession {
+      liveActivityManager.updatePauseState(session: session)
+    }
   }
 
   private func startBreak(context: ModelContext) {
@@ -561,7 +593,7 @@ class StrategyManager: ObservableObject {
     }
 
     if let strategyId = definedProfile.blockingStrategyId {
-      let strategy = getStrategy(id: strategyId)
+      let strategy = getStrategy(id: strategyId, context: context)
       let view = strategy.startBlocking(
         context: context,
         profile: definedProfile,
@@ -584,7 +616,7 @@ class StrategyManager: ObservableObject {
     }
 
     if let strategyId = session.blockedProfile.blockingStrategyId {
-      let strategy = getStrategy(id: strategyId)
+      let strategy = getStrategy(id: strategyId, context: context)
       let view = strategy.stopBlocking(context: context, session: session)
 
       if let customView = view {
@@ -684,6 +716,9 @@ class StrategyManager: ObservableObject {
 
     // Remove all strategy timer activities
     DeviceActivityCenterUtil.removeAllStrategyTimerActivities()
+
+    // Remove all pause timer activities
+    DeviceActivityCenterUtil.removeAllPauseTimerActivities()
 
     print("Blocking state reset complete")
   }

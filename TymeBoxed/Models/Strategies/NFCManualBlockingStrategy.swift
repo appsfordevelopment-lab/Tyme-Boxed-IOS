@@ -9,6 +9,7 @@ class NFCManualBlockingStrategy: BlockingStrategy {
   var iconType: String = "badge.plus.radiowaves.forward"
   var color: Color = .yellow
 
+  var usesNFC: Bool = true
   var hidden: Bool = false
 
   var onSessionCreation: ((SessionStatus) -> Void)?
