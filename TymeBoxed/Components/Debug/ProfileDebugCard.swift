@@ -115,7 +115,7 @@ struct ProfileDebugCard: View {
 
   let profile = BlockedProfiles(
     name: "Scheduled Focus",
-    blockingStrategyId: ManualBlockingStrategy.id,
+    blockingStrategyId: NFCBlockingStrategy.id,
     enableLiveActivity: true,
     enableBreaks: true,
     order: 2,

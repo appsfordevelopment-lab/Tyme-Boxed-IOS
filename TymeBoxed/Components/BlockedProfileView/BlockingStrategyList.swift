@@ -41,7 +41,7 @@ struct BlockingStrategyList: View {
     Form {
       Section {
         BlockingStrategyList(
-          strategies: [NFCBlockingStrategy(), ManualBlockingStrategy()],
+          strategies: [NFCBlockingStrategy(), NFCManualBlockingStrategy()],
           selectedStrategy: $selectedStrategy,
           disabled: true,
           disabledText: "Strategy selection is locked"

@@ -273,7 +273,7 @@ struct BlockedProfileCarousel: View {
           id: UUID(),
           name: "Social Media",
           selectedActivity: FamilyActivitySelection(),
-          blockingStrategyId: ManualBlockingStrategy.id,
+          blockingStrategyId: NFCManualBlockingStrategy.id,
           enableLiveActivity: true,
           reminderTimeInSeconds: 1800
         ),
@@ -320,7 +320,7 @@ struct BlockedProfileCarousel: View {
           id: UUID(),
           name: "Social Media",
           selectedActivity: FamilyActivitySelection(),
-          blockingStrategyId: ManualBlockingStrategy.id,
+          blockingStrategyId: NFCManualBlockingStrategy.id,
           enableLiveActivity: true,
           reminderTimeInSeconds: 1800
         ),
@@ -370,7 +370,7 @@ struct BlockedProfileCarousel: View {
           id: UUID(),
           name: "Social Media",
           selectedActivity: FamilyActivitySelection(),
-          blockingStrategyId: ManualBlockingStrategy.id,
+          blockingStrategyId: NFCManualBlockingStrategy.id,
           enableLiveActivity: true,
           reminderTimeInSeconds: 1800
         ),
