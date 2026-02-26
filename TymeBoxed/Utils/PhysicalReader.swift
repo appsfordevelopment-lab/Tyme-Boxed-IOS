@@ -9,7 +9,8 @@ class PhysicalReader {
     onSuccess: @escaping (String) -> Void,
   ) {
     nfcScanner.onTagScanned = { result in
-      let tagId = result.url ?? result.id
+      let tagId = (result.url ?? result.id).trimmingCharacters(in: .whitespacesAndNewlines)
+      guard !tagId.isEmpty else { return }
       onSuccess(tagId)
     }
 

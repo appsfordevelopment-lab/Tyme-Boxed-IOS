@@ -6,7 +6,7 @@ class NFCBlockingStrategy: BlockingStrategy {
 
   var name: String = "NFC Tags"
   var description: String =
-    "Block and unblock profiles by using the exact same NFC tag"
+    "Block and unblock profiles with any registered NFC tag"
   var iconType: String = "wave.3.right.circle.fill"
   var color: Color = .yellow
 
@@ -33,7 +33,8 @@ class NFCBlockingStrategy: BlockingStrategy {
     let forceStartValue = forceStart ?? false
 
     nfcScanner.onTagScanned = { tag in
-      let tagId = tag.url ?? tag.id
+      let tagId = (tag.url ?? tag.id).trimmingCharacters(in: .whitespacesAndNewlines)
+      guard !tagId.isEmpty else { return }
 
       Task {
         let valid = await AuthenticationManager.shared.isNFCTagValidForUnlock(tagId: tagId)
@@ -58,6 +59,7 @@ class NFCBlockingStrategy: BlockingStrategy {
               withProfile: profile,
               forceStart: forceStartValue
             )
+          try? context.save()
           self.onSessionCreation?(.started(activeSession))
         }
       }
@@ -76,7 +78,8 @@ class NFCBlockingStrategy: BlockingStrategy {
     let profileName = session.blockedProfile.name
 
     nfcScanner.onTagScanned = { tag in
-      let tagId = tag.url ?? tag.id
+      let tagId = (tag.url ?? tag.id).trimmingCharacters(in: .whitespacesAndNewlines)
+      guard !tagId.isEmpty else { return }
 
       Task {
         let valid = await AuthenticationManager.shared.isNFCTagValidForUnlock(tagId: tagId)
@@ -93,17 +96,14 @@ class NFCBlockingStrategy: BlockingStrategy {
             return
           }
           if let physicalUnblockNFCTagId = session.blockedProfile.physicalUnblockNFCTagId {
-            if physicalUnblockNFCTagId != tagId {
+            let tagUid = tag.id.trimmingCharacters(in: .whitespacesAndNewlines)
+            let physicalMatch = physicalUnblockNFCTagId == tagId || physicalUnblockNFCTagId == tagUid
+            if !physicalMatch {
               self.onErrorMessage?(
                 "This NFC tag is not allowed to unblock this profile. Physical unblock setting is on for this profile"
               )
               return
             }
-          } else if !session.forceStarted && session.tag != tagId {
-            self.onErrorMessage?(
-              "You must scan the original tag to stop focus"
-            )
-            return
           }
           let profile = session.blockedProfile
           session.endSession()

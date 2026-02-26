@@ -63,7 +63,8 @@ class NFCPauseTimerBlockingStrategy: BlockingStrategy {
     let isPauseActive = session.isPauseActive
 
     nfcScanner.onTagScanned = { tag in
-      let tagId = tag.url ?? tag.id
+      let tagId = (tag.url ?? tag.id).trimmingCharacters(in: .whitespacesAndNewlines)
+      guard !tagId.isEmpty else { return }
 
       Task { @MainActor in
         let valid = await AuthenticationManager.shared.isNFCTagValidForUnlock(tagId: tagId)

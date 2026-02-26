@@ -14,8 +14,10 @@ class NFCScannerUtil: NSObject {
 
   private var nfcSession: NFCReaderSession?
   private var urlToWrite: String?
+  private var scanSucceeded = false
 
   func scan(profileName: String) {
+    scanSucceeded = false
     guard NFCReaderSession.readingAvailable else {
       self.onError?("NFC scanning not available on this device")
       return
@@ -60,7 +62,18 @@ extension NFCScannerUtil: NFCTagReaderSessionDelegate {
 
   func tagReaderSession(_ session: NFCTagReaderSession, didInvalidateWithError error: Error) {
     DispatchQueue.main.async {
-      self.onError?(error.localizedDescription)
+      guard !self.scanSucceeded else { return }
+      if let readerError = error as? NFCReaderError {
+        switch readerError.code {
+        case .readerSessionInvalidationErrorFirstNDEFTagRead,
+          .readerSessionInvalidationErrorUserCanceled:
+          break
+        default:
+          self.onError?(readerError.localizedDescription)
+        }
+      } else {
+        self.onError?(error.localizedDescription)
+      }
     }
   }
 
@@ -161,9 +174,16 @@ extension NFCScannerUtil: NFCTagReaderSessionDelegate {
   }
 
   private func handleTagData(id: String, url: String?, session: NFCTagReaderSession) {
+    let tagId = (url ?? id).trimmingCharacters(in: .whitespacesAndNewlines)
+    guard !tagId.isEmpty else {
+      session.invalidate(errorMessage: "Unable to read tag identifier")
+      return
+    }
+
     let result = NFCResult(id: id, url: url, DateScanned: Date())
 
     DispatchQueue.main.async {
+      self.scanSucceeded = true
       self.onTagScanned?(result)
       session.invalidate()
     }
