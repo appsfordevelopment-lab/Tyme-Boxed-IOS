@@ -3,7 +3,7 @@ import Foundation
 
 enum SharedData {
   private static let suite = UserDefaults(
-    suiteName: "group.dev.ambitionsoftware.timeboxed"
+    suiteName: "group.dev.ambitionsoftware.tymeboxed"
   )!
 
   // MARK: – Keys

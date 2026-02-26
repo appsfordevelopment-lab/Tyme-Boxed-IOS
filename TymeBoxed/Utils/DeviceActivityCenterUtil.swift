@@ -136,7 +136,7 @@ class DeviceActivityCenterUtil {
     let deviceActivityName = pauseTimerActivity.getDeviceActivityName(
       from: profile.id.uuidString)
 
-    let (intervalStart, intervalEnd) = getTimeIntervalStartAndEnd(
+    let (intervalStart, intervalEnd) = getPauseTimeIntervalStartAndEnd(
       from: pauseData.pauseDurationInMinutes)
 
     let deviceActivitySchedule = DeviceActivitySchedule(
@@ -221,6 +221,31 @@ class DeviceActivityCenterUtil {
     }
 
     let intervalEnd = DateComponents(hour: endHour, minute: endMinute)
+    return (intervalStart: intervalStart, intervalEnd: intervalEnd)
+  }
+
+  /// Uses current time as interval start for accurate pause timer scheduling.
+  /// Device Activity requires minimum 15 min interval; durations under 15 min are capped.
+  private static func getPauseTimeIntervalStartAndEnd(from minutes: Int) -> (
+    intervalStart: DateComponents, intervalEnd: DateComponents
+  ) {
+    let calendar = Calendar.current
+    let now = Date()
+
+    let effectiveMinutes = max(minutes, 15)
+    guard let intervalEndDate = calendar.date(byAdding: .minute, value: effectiveMinutes, to: now)
+    else {
+      return getTimeIntervalStartAndEnd(from: minutes)
+    }
+
+    let intervalStart = calendar.dateComponents(
+      [.year, .month, .day, .hour, .minute],
+      from: now
+    )
+    let intervalEnd = calendar.dateComponents(
+      [.year, .month, .day, .hour, .minute],
+      from: intervalEndDate
+    )
     return (intervalStart: intervalStart, intervalEnd: intervalEnd)
   }
 }

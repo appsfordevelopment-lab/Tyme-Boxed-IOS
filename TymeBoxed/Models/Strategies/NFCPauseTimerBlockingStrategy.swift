@@ -89,9 +89,14 @@ class NFCPauseTimerBlockingStrategy: BlockingStrategy {
           self.appBlocker.deactivateRestrictions()
           self.onSessionCreation?(.ended(session.blockedProfile))
         } else {
-          // First scan: unblock apps immediately, timer keeps running for pause duration
+          // First scan: pause and unblock. Timer runs; when it ends, extension re-blocks.
+          let pauseStartTime = Date()
+          BlockedProfiles.updateSnapshot(for: session.blockedProfile)
           SharedData.resetPause()
-          SharedData.setPauseStartTime(date: Date())
+          SharedData.setPauseStartTime(date: pauseStartTime)
+          session.pauseStartTime = pauseStartTime
+          session.pauseEndTime = nil
+          try? context.save()
           self.appBlocker.deactivateRestrictions()
           DeviceActivityCenterUtil.startPauseTimerActivity(for: session.blockedProfile)
           self.onSessionCreation?(.paused)

@@ -25,7 +25,7 @@ class ThemeManager: ObservableObject {
   private static let defaultColorName = "Warm Sandstone"
 
   @AppStorage(
-    "timeboxedThemeColorName", store: UserDefaults(suiteName: "group.dev.ambitionsoftware.timeboxed"))
+    "timeboxedThemeColorName", store: UserDefaults(suiteName: "group.dev.ambitionsoftware.tymeboxed"))
   private var themeColorName: String = "Warm Sandstone"
 
   var selectedColorName: String {

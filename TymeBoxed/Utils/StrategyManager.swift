@@ -115,6 +115,21 @@ class StrategyManager: ObservableObject {
         let timeSincePauseStart = Date().timeIntervalSince(pauseStartTime)
         let pauseDurationInSeconds = self.getPauseDurationInSeconds(for: session.blockedProfile)
         self.elapsedTime = max(0, pauseDurationInSeconds - timeSincePauseStart)
+
+        // Fallback: if pause duration has elapsed but extension didn't re-block, do it in-app
+        if timeSincePauseStart >= pauseDurationInSeconds,
+          session.pauseEndTime == nil,
+          SharedData.getActiveSharedSession()?.pauseEndTime == nil
+        {
+          SharedData.setPauseEndTime(date: Date())
+          self.appBlocker.activateRestrictions(
+            for: BlockedProfiles.getSnapshot(for: session.blockedProfile))
+          DeviceActivityCenterUtil.removePauseTimerActivity(for: session.blockedProfile)
+          NotificationCenter.default.post(
+            name: .strategyManagerPauseEnded,
+            object: nil
+          )
+        }
       } else if session.isBreakActive {
         // Calculate break time remaining (countdown)
         guard let breakStartTime = session.breakStartTime else { return }

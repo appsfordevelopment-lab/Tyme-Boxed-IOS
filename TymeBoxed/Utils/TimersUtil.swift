@@ -4,6 +4,8 @@ import UserNotifications
 
 // MARK: - Notification Constants
 extension Notification.Name {
+  static let strategyManagerPauseEnded = Notification.Name("StrategyManagerPauseEnded")
+
   fileprivate static let backgroundTaskExecuted = Notification.Name(
     "BackgroundTaskExecuted"
   )

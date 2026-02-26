@@ -206,6 +206,9 @@ struct HomeView: View {
         unloadApp()
       }
     }
+    .onReceive(NotificationCenter.default.publisher(for: .strategyManagerPauseEnded)) { _ in
+      loadApp()
+    }
     .onReceive(strategyManager.$errorMessage) { errorMessage in
       if let message = errorMessage {
         showErrorAlert(message: message)
