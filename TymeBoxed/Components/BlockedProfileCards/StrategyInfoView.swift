@@ -27,9 +27,16 @@ struct StrategyInfoView: View {
     return StrategyManager.getStrategyFromId(id: strategyId).color
   }
 
+  // Get blocking strategy icon rotation
+  private var blockingStrategyIconRotation: Angle {
+    guard let strategyId = strategyId else { return .zero }
+    return StrategyManager.getStrategyFromId(id: strategyId).iconRotation
+  }
+
   var body: some View {
     HStack {
       Image(systemName: blockingStrategyIcon)
+        .rotationEffect(blockingStrategyIconRotation)
         .foregroundColor(themeManager.themeColor)
         .font(.system(size: 13))
         .frame(width: 28, height: 28)

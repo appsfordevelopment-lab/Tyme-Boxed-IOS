@@ -279,6 +279,9 @@ struct HomeView: View {
 
   private func unloadApp() {
     strategyManager.stopTimer()
+    if strategyManager.isPauseActive {
+      TimersUtil().reschedulePauseEndWhenEnteringBackground()
+    }
   }
 
   private func showErrorAlert(message: String) {

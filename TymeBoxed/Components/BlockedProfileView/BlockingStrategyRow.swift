@@ -17,6 +17,7 @@ struct StrategyRow: View {
         HStack(alignment: .center, spacing: 8) {
           Image(systemName: strategy.iconType)
             .font(.subheadline)
+            .rotationEffect(strategy.iconRotation)
             .foregroundStyle(.secondary)
             .frame(width: 24, height: 24)
             .background(.secondary.opacity(0.12))

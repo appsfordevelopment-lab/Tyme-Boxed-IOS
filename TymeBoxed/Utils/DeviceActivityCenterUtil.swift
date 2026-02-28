@@ -130,34 +130,38 @@ class DeviceActivityCenterUtil {
       return
     }
     let pauseData = StrategyPauseTimerData.toStrategyPauseTimerData(from: strategyData)
+    let minutes = pauseData.pauseDurationInMinutes
 
     let center = DeviceActivityCenter()
     let pauseTimerActivity = PauseTimerActivity()
     let deviceActivityName = pauseTimerActivity.getDeviceActivityName(
       from: profile.id.uuidString)
 
-    let (intervalStart, intervalEnd) = getPauseTimeIntervalStartAndEnd(
-      from: pauseData.pauseDurationInMinutes)
+    let (intervalStart, intervalEnd) = getPauseTimeIntervalStartAndEnd(from: minutes)
 
     let deviceActivitySchedule = DeviceActivitySchedule(
       intervalStart: intervalStart,
       intervalEnd: intervalEnd,
-      repeats: false,
+      repeats: false
     )
 
     do {
       stopActivities(for: [deviceActivityName])
       try center.startMonitoring(deviceActivityName, during: deviceActivitySchedule)
-      print("Scheduled pause timer activity from \(intervalStart) to \(intervalEnd)")
+      print("Scheduled pause timer activity for \(minutes) min")
     } catch {
       print("Failed to start pause timer activity: \(error.localizedDescription)")
     }
   }
 
   static func removePauseTimerActivity(for profile: BlockedProfiles) {
+    removePauseTimerActivity(forProfileId: profile.id.uuidString)
+  }
+
+  static func removePauseTimerActivity(forProfileId profileId: String) {
     let pauseTimerActivity = PauseTimerActivity()
     let deviceActivityName = pauseTimerActivity.getDeviceActivityName(
-      from: profile.id.uuidString)
+      from: profileId)
     stopActivities(for: [deviceActivityName])
   }
 
@@ -224,20 +228,19 @@ class DeviceActivityCenterUtil {
     return (intervalStart: intervalStart, intervalEnd: intervalEnd)
   }
 
-  /// Uses current time as interval start for accurate pause timer scheduling.
-  /// Device Activity requires minimum 15 min interval; durations under 15 min are capped.
   private static func getPauseTimeIntervalStartAndEnd(from minutes: Int) -> (
     intervalStart: DateComponents, intervalEnd: DateComponents
   ) {
     let calendar = Calendar.current
     let now = Date()
-
-    let effectiveMinutes = max(minutes, 15)
-    guard let intervalEndDate = calendar.date(byAdding: .minute, value: effectiveMinutes, to: now)
-    else {
+    let effectiveMinutes = max(minutes, 1)
+    guard let intervalEndDate = calendar.date(
+      byAdding: .minute,
+      value: effectiveMinutes,
+      to: now
+    ) else {
       return getTimeIntervalStartAndEnd(from: minutes)
     }
-
     let intervalStart = calendar.dateComponents(
       [.year, .month, .day, .hour, .minute],
       from: now

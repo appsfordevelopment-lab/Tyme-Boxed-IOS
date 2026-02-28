@@ -26,7 +26,7 @@ struct BlockedProfileView: View {
   var profile: BlockedProfiles?
 
   @State private var name: String = ""
-  @State private var enableLiveActivity: Bool = true
+  @State private var enableLiveActivity: Bool = false
   @State private var enableReminder: Bool = false
   @State private var enableBreaks: Bool = false
   @State private var breakTimeInMinutes: Int = 15
@@ -88,7 +88,7 @@ struct BlockedProfileView: View {
       initialValue: profile?.selectedActivity ?? FamilyActivitySelection()
     )
     _enableLiveActivity = State(
-      initialValue: profile?.enableLiveActivity ?? true
+      initialValue: profile?.enableLiveActivity ?? false
     )
     _enableBreaks = State(
       initialValue: profile?.enableBreaks ?? false

@@ -11,6 +11,7 @@ struct ProfileTimerButton: View {
   let elapsedTime: TimeInterval?
 
   let stopButtonTitle: String
+  let stopButtonIcon: String
 
   let onStartTapped: () -> Void
   let onStopTapped: () -> Void
@@ -23,6 +24,7 @@ struct ProfileTimerButton: View {
     isBreakActive: Bool,
     elapsedTime: TimeInterval? = nil,
     stopButtonTitle: String = "Stop",
+    stopButtonIcon: String = "stop.fill",
     onStartTapped: @escaping () -> Void,
     onStopTapped: @escaping () -> Void,
     onBreakTapped: @escaping () -> Void
@@ -32,6 +34,7 @@ struct ProfileTimerButton: View {
     self.isBreakActive = isBreakActive
     self.elapsedTime = elapsedTime
     self.stopButtonTitle = stopButtonTitle
+    self.stopButtonIcon = stopButtonIcon
     self.onStartTapped = onStartTapped
     self.onStopTapped = onStopTapped
     self.onBreakTapped = onBreakTapped
@@ -75,7 +78,7 @@ struct ProfileTimerButton: View {
           // Stop/End button
           GlassButton(
             title: stopButtonTitle,
-            icon: "stop.fill",
+            icon: stopButtonIcon,
             fullWidth: false,
             equalWidth: true
           ) {

@@ -4,10 +4,11 @@ import SwiftUI
 class NFCBlockingStrategy: BlockingStrategy {
   static var id: String = "NFCBlockingStrategy"
 
-  var name: String = "NFC Tags"
+  var name: String = "Tyme Boxed Mode"
   var description: String =
-    "Block and unblock profiles with any registered NFC tag"
-  var iconType: String = "wave.3.right.circle.fill"
+    "Lock and unlock using your device."
+  var iconType: String = "key.fill"
+  var iconRotation: Angle = .degrees(35)
   var color: Color = .yellow
 
   var usesNFC: Bool = true

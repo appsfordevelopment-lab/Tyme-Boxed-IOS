@@ -4,14 +4,15 @@ import SwiftUI
 class NFCTimerBlockingStrategy: BlockingStrategy {
   static var id: String = "NFCTimerBlockingStrategy"
 
-  var name: String = "NFC + Timer"
-  var description: String = "Set a focus duration, then scan any NFC tag to stop early."
-  var iconType: String = "alarm.waves.left.and.right"
+  var name: String = "Focus Session"
+  var description: String = "Set a focus duration, then scan the device to end early."
+  var iconType: String = "timer"
+  var iconRotation: Angle = .zero
   var color: Color = .mint
 
   var usesNFC: Bool = true
   var hasTimer: Bool = true
-
+  var isBeta: Bool = false
   var hidden: Bool = false
 
   var onSessionCreation: ((SessionStatus) -> Void)?

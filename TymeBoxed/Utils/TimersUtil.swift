@@ -28,17 +28,21 @@ class TimersUtil {
   // Constants for background task identifiers
   static let backgroundProcessingTaskIdentifier =
     "com.timeboxed.backgroundprocessing"
+  static let pauseEndRecoveryTaskIdentifier = "com.timeboxed.pauseendrecovery"
   static let backgroundTaskUserDefaultsKey = "com.timeboxed.backgroundtasks"
+  private static let backgroundTasksSuite = UserDefaults(
+    suiteName: "group.dev.ambitionsoftware.tymeboxed"
+  ) ?? .standard
 
   private var backgroundTasks: [String: [String: Any]] {
     get {
-      UserDefaults.standard.dictionary(
+      Self.backgroundTasksSuite.dictionary(
         forKey: Self.backgroundTaskUserDefaultsKey
       )
         as? [String: [String: Any]] ?? [:]
     }
     set {
-      UserDefaults.standard.set(
+      Self.backgroundTasksSuite.set(
         newValue,
         forKey: Self.backgroundTaskUserDefaultsKey
       )
@@ -57,10 +61,77 @@ class TimersUtil {
       }
       Self.handleBackgroundProcessingTask(processingTask)
     }
+
+    BGTaskScheduler.shared.register(
+      forTaskWithIdentifier: pauseEndRecoveryTaskIdentifier,
+      using: nil
+    ) { task in
+      guard let refreshTask = task as? BGAppRefreshTask else {
+        task.setTaskCompleted(success: false)
+        return
+      }
+      Self.handlePauseEndRecoveryTask(refreshTask)
+    }
   }
+
+  private static func handlePauseEndRecoveryTask(_ task: BGAppRefreshTask) {
+    let timerUtil = TimersUtil()
+    let appBlocker = AppBlockerUtil()
+    var didReBlock = false
+    var needsReschedule = false
+    var nextCheckDate: Date?
+
+    for (taskId, taskInfo) in timerUtil.backgroundTasks {
+      guard let pauseProfileId = taskInfo["pauseProfileId"] as? String,
+        let executionTime = taskInfo["executionTime"] as? Date
+      else {
+        continue
+      }
+
+      if executionTime <= Date() {
+        if let profile = SharedData.snapshot(for: pauseProfileId),
+          SharedData.getActiveSharedSession()?.pauseEndTime == nil
+        {
+          SharedData.setPauseEndTime(date: Date())
+          appBlocker.activateRestrictions(for: profile)
+          DeviceActivityCenterUtil.removePauseTimerActivity(forProfileId: pauseProfileId)
+          var tasks = timerUtil.backgroundTasks
+          tasks.removeValue(forKey: taskId)
+          timerUtil.backgroundTasks = tasks
+          NotificationCenter.default.post(name: .strategyManagerPauseEnded, object: nil)
+          print("[PauseTimer] BGAppRefresh re-blocked after pause ended for profile \(pauseProfileId)")
+          didReBlock = true
+          break
+        }
+      } else {
+        needsReschedule = true
+        if nextCheckDate == nil || executionTime < nextCheckDate! {
+          nextCheckDate = executionTime
+        }
+      }
+    }
+
+    if needsReschedule, let next = nextCheckDate, !didReBlock {
+      let oneMinuteFromNow = Date().addingTimeInterval(60)
+      let scheduleDate = next < oneMinuteFromNow ? next : oneMinuteFromNow
+      let request = BGAppRefreshTaskRequest(identifier: Self.pauseEndRecoveryTaskIdentifier)
+      request.earliestBeginDate = scheduleDate
+      do {
+        try BGTaskScheduler.shared.submit(request)
+        print("[PauseTimer] BGAppRefresh rescheduled for \(scheduleDate)")
+      } catch {
+        print("[PauseTimer] Could not reschedule BGAppRefresh: \(error)")
+      }
+    }
+
+    task.setTaskCompleted(success: didReBlock)
+  }
+
+  static let pauseEndTaskPrefix = "pauseEnd:"
 
   private static func handleBackgroundProcessingTask(_ task: BGProcessingTask) {
     let timerUtil = TimersUtil()
+    let appBlocker = AppBlockerUtil()
 
     // Get all pending tasks from UserDefaults
     let tasks = timerUtil.backgroundTasks
@@ -68,25 +139,42 @@ class TimersUtil {
     var hasExecutedTasks = false
 
     for (taskId, taskInfo) in tasks {
-      if let executionTime = taskInfo["executionTime"] as? Date,
+      guard let executionTime = taskInfo["executionTime"] as? Date,
         executionTime <= Date()
-      {
-        // Task is due for execution
-        if let notificationId = taskInfo["notificationId"] as? String {
-          // This was a notification task, we can cancel it as the system will handle it
-          timerUtil.cancelNotification(identifier: notificationId)
-        }
+      else {
+        continue
+      }
 
-        // Execute any custom code via notification callback
+      if let pauseProfileId = taskInfo["pauseProfileId"] as? String {
+        if let profile = SharedData.snapshot(for: pauseProfileId),
+          SharedData.getActiveSharedSession()?.pauseEndTime == nil
+        {
+          SharedData.setPauseEndTime(date: Date())
+          appBlocker.activateRestrictions(for: profile)
+          DeviceActivityCenterUtil.removePauseTimerActivity(forProfileId: pauseProfileId)
+          NotificationCenter.default.post(
+            name: .strategyManagerPauseEnded,
+            object: nil
+          )
+          print("[PauseTimer] Background task re-blocked after pause ended for profile \(pauseProfileId)")
+        }
+      } else if let notificationId = taskInfo["notificationId"] as? String {
+        timerUtil.cancelNotification(identifier: notificationId)
         NotificationCenter.default.post(
           name: .backgroundTaskExecuted,
           object: nil,
           userInfo: ["taskId": taskId]
         )
-
-        completedTaskIds.append(taskId)
-        hasExecutedTasks = true
+      } else {
+        NotificationCenter.default.post(
+          name: .backgroundTaskExecuted,
+          object: nil,
+          userInfo: ["taskId": taskId]
+        )
       }
+
+      completedTaskIds.append(taskId)
+      hasExecutedTasks = true
     }
 
     // Remove completed tasks
@@ -141,11 +229,73 @@ class TimersUtil {
     backgroundTasks = tasks
   }
 
+  /// Schedules a background task to re-block when the pause timer expires.
+  /// Uses chained scheduling: first check in 1 min, then reschedule until pause ends.
+  /// iOS is more likely to run tasks requested for the near future.
+  func schedulePauseEndTask(profileId: String, endDate: Date) {
+    let taskId = Self.pauseEndTaskPrefix + profileId
+    var tasks = backgroundTasks
+    tasks[taskId] = [
+      "executionTime": endDate,
+      "pauseProfileId": profileId,
+    ]
+    backgroundTasks = tasks
+    scheduleBackgroundProcessing()
+
+    let thirtySecFromNow = Date().addingTimeInterval(30)
+    let oneMinFromNow = Date().addingTimeInterval(60)
+    let firstCheckDate = endDate < thirtySecFromNow ? endDate : min(thirtySecFromNow, oneMinFromNow)
+    let refreshRequest = BGAppRefreshTaskRequest(
+      identifier: Self.pauseEndRecoveryTaskIdentifier
+    )
+    refreshRequest.earliestBeginDate = firstCheckDate
+    do {
+      try BGTaskScheduler.shared.submit(refreshRequest)
+      print("[PauseTimer] Scheduled BGAppRefresh first check at \(firstCheckDate), pause ends \(endDate)")
+    } catch {
+      print("[PauseTimer] Could not schedule BGAppRefresh: \(error)")
+    }
+  }
+
+  /// Cancels the pause-end background task. Call when user ends pause early via NFC.
+  func cancelPauseEndTask(profileId: String) {
+    cancelBackgroundTask(taskId: Self.pauseEndTaskPrefix + profileId)
+    BGTaskScheduler.shared.cancel(
+      taskRequestWithIdentifier: Self.pauseEndRecoveryTaskIdentifier
+    )
+  }
+
+  /// Reschedules pause-end BGAppRefresh when app goes to background. Gives iOS another chance.
+  func reschedulePauseEndWhenEnteringBackground() {
+    var earliest: (Date, String)?
+    for (_, taskInfo) in backgroundTasks {
+      guard let pauseProfileId = taskInfo["pauseProfileId"] as? String,
+        let executionTime = taskInfo["executionTime"] as? Date,
+        executionTime > Date()
+      else { continue }
+      if earliest == nil || executionTime < earliest!.0 {
+        earliest = (executionTime, pauseProfileId)
+      }
+    }
+    guard let (endDate, _) = earliest else { return }
+    let request = BGAppRefreshTaskRequest(identifier: Self.pauseEndRecoveryTaskIdentifier)
+    request.earliestBeginDate = Date().addingTimeInterval(30)
+    do {
+      try BGTaskScheduler.shared.submit(request)
+      print("[PauseTimer] Rescheduled BGAppRefresh when entering background, pause ends \(endDate)")
+    } catch {
+      print("[PauseTimer] Reschedule failed: \(error)")
+    }
+  }
+
   // Cancel all background tasks
   func cancelAllBackgroundTasks() {
     backgroundTasks = [:]
     BGTaskScheduler.shared.cancel(
       taskRequestWithIdentifier: Self.backgroundProcessingTaskIdentifier
+    )
+    BGTaskScheduler.shared.cancel(
+      taskRequestWithIdentifier: Self.pauseEndRecoveryTaskIdentifier
     )
   }
 

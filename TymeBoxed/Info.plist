@@ -5,6 +5,7 @@
 	<key>BGTaskSchedulerPermittedIdentifiers</key>
 	<array>
 		<string>com.timeboxed.backgroundprocessing</string>
+		<string>com.timeboxed.pauseendrecovery</string>
 	</array>
 	<key>CFBundleIconName</key>
 	<string>AppIcon</string>

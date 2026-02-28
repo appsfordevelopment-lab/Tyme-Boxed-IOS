@@ -4,21 +4,25 @@ import SwiftUI
 class NFCPauseTimerBlockingStrategy: BlockingStrategy {
   static var id: String = "NFCPauseTimerBlockingStrategy"
 
-  var name: String = "NFC + Pause Timer"
+  var name: String = "Focus session with Break"
   var description: String =
-    "Set a pause duration, scan once to pause, and scan again to fully end."
-  var iconType: String = "pause.circle"
+    "Set a break duration, scan once for break, and scan again to fully stop."
+  var iconType: String = "pause"
+  var iconRotation: Angle = .zero
   var color: Color = .orange
 
   var usesNFC: Bool = true
-  var hasPauseMode: Bool = true
+  var hasTimer: Bool = true
+  var hasPauseMode: Bool = false
+  var isBeta: Bool = true
   var hidden: Bool = false
 
   var onSessionCreation: ((SessionStatus) -> Void)?
-  var onErrorMessage: ((String) -> Void)?
+  var onErrorMessage: ((String) -> Void)?  
 
   private let nfcScanner: NFCScannerUtil = NFCScannerUtil()
   private let appBlocker: AppBlockerUtil = AppBlockerUtil()
+  private let timersUtil: TimersUtil = TimersUtil()
 
   func getIdentifier() -> String {
     return NFCPauseTimerBlockingStrategy.id
@@ -84,6 +88,7 @@ class NFCPauseTimerBlockingStrategy: BlockingStrategy {
         }
 
         if isPauseActive {
+          self.timersUtil.cancelPauseEndTask(profileId: session.blockedProfile.id.uuidString)
           DeviceActivityCenterUtil.removePauseTimerActivity(for: session.blockedProfile)
           session.endSession()
           try? context.save()
@@ -100,6 +105,18 @@ class NFCPauseTimerBlockingStrategy: BlockingStrategy {
           try? context.save()
           self.appBlocker.deactivateRestrictions()
           DeviceActivityCenterUtil.startPauseTimerActivity(for: session.blockedProfile)
+          let pauseData = session.blockedProfile.strategyData.map {
+            StrategyPauseTimerData.toStrategyPauseTimerData(from: $0)
+          } ?? StrategyPauseTimerData(pauseDurationInMinutes: 5)
+          let endDate = Calendar.current.date(
+            byAdding: .minute,
+            value: pauseData.pauseDurationInMinutes,
+            to: pauseStartTime
+          ) ?? pauseStartTime
+          self.timersUtil.schedulePauseEndTask(
+            profileId: session.blockedProfile.id.uuidString,
+            endDate: endDate
+          )
           self.onSessionCreation?(.paused)
         }
       }

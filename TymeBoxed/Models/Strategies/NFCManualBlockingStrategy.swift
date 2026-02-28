@@ -4,12 +4,14 @@ import SwiftUI
 class NFCManualBlockingStrategy: BlockingStrategy {
   static var id: String = "NFCManualBlockingStrategy"
 
-  var name: String = "NFC + Manual"
-  var description: String = "Block manually, but unblock by using any NFC tag"
-  var iconType: String = "badge.plus.radiowaves.forward"
+  var name: String = "Tyme Boxed + Manual Start"
+  var description: String = "Lock manually, then scan the device to unlock."
+  var iconType: String = "key.fill"
+  var iconRotation: Angle = .degrees(35)
   var color: Color = .yellow
 
   var usesNFC: Bool = true
+  var hasManual: Bool = true
   var hidden: Bool = false
 
   var onSessionCreation: ((SessionStatus) -> Void)?
