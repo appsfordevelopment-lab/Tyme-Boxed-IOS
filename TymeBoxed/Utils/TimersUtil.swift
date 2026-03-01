@@ -229,10 +229,17 @@ class TimersUtil {
     backgroundTasks = tasks
   }
 
-  /// Schedules a background task to re-block when the pause timer expires.
+  static let pauseEndNotificationIdentifierPrefix = "pauseEndNotification:"
+
+  /// Schedules a background task and notification to re-block when the pause timer expires.
   /// Uses chained scheduling: first check in 1 min, then reschedule until pause ends.
   /// iOS is more likely to run tasks requested for the near future.
-  func schedulePauseEndTask(profileId: String, endDate: Date) {
+  /// Also schedules a "break over" notification - when user opens the app from it, fallback re-blocks.
+  func schedulePauseEndTask(
+    profileId: String,
+    endDate: Date,
+    profileName: String? = nil
+  ) {
     let taskId = Self.pauseEndTaskPrefix + profileId
     var tasks = backgroundTasks
     tasks[taskId] = [
@@ -255,17 +262,30 @@ class TimersUtil {
     } catch {
       print("[PauseTimer] Could not schedule BGAppRefresh: \(error)")
     }
+
+    let secondsUntilEnd = endDate.timeIntervalSince(Date())
+    if secondsUntilEnd > 1 {
+      let notificationId = Self.pauseEndNotificationIdentifierPrefix + profileId
+      scheduleNotification(
+        title: "Break over!",
+        message: "Open Tyme Boxed to resume blocking\(profileName.map { " for \($0)" } ?? "").",
+        seconds: secondsUntilEnd,
+        identifier: notificationId
+      )
+    }
   }
 
-  /// Cancels the pause-end background task. Call when user ends pause early via NFC.
+  /// Cancels the pause-end background task and notification. Call when user ends pause early via NFC.
   func cancelPauseEndTask(profileId: String) {
     cancelBackgroundTask(taskId: Self.pauseEndTaskPrefix + profileId)
+    cancelNotification(identifier: Self.pauseEndNotificationIdentifierPrefix + profileId)
     BGTaskScheduler.shared.cancel(
       taskRequestWithIdentifier: Self.pauseEndRecoveryTaskIdentifier
     )
   }
 
   /// Reschedules pause-end BGAppRefresh when app goes to background. Gives iOS another chance.
+  /// Schedules for the actual end time when close; otherwise 30s from now for iOS to re-evaluate.
   func reschedulePauseEndWhenEnteringBackground() {
     var earliest: (Date, String)?
     for (_, taskInfo) in backgroundTasks {
@@ -279,10 +299,12 @@ class TimersUtil {
     }
     guard let (endDate, _) = earliest else { return }
     let request = BGAppRefreshTaskRequest(identifier: Self.pauseEndRecoveryTaskIdentifier)
-    request.earliestBeginDate = Date().addingTimeInterval(30)
+    let now = Date()
+    let thirtySecFromNow = now.addingTimeInterval(30)
+    request.earliestBeginDate = endDate <= thirtySecFromNow ? endDate : thirtySecFromNow
     do {
       try BGTaskScheduler.shared.submit(request)
-      print("[PauseTimer] Rescheduled BGAppRefresh when entering background, pause ends \(endDate)")
+      print("[PauseTimer] Rescheduled BGAppRefresh when entering background for \(endDate)")
     } catch {
       print("[PauseTimer] Reschedule failed: \(error)")
     }

@@ -124,6 +124,10 @@ class DeviceActivityCenterUtil {
     stopActivities(for: strategyTimerActivities, with: center)
   }
 
+  /// Minimum pause duration (minutes) required by DeviceActivitySchedule.
+  /// Intervals shorter than this fail with intervalTooShort and never fire intervalDidEnd.
+  private static let pauseDeviceActivityMinimumMinutes = 15
+
   static func startPauseTimerActivity(for profile: BlockedProfiles) {
     guard let strategyData = profile.strategyData else {
       print("No strategy data found for pause timer in profile: \(profile.id.uuidString)")
@@ -131,6 +135,13 @@ class DeviceActivityCenterUtil {
     }
     let pauseData = StrategyPauseTimerData.toStrategyPauseTimerData(from: strategyData)
     let minutes = pauseData.pauseDurationInMinutes
+
+    guard minutes >= pauseDeviceActivityMinimumMinutes else {
+      print(
+        "[PauseTimer] Skipping DeviceActivity for \(minutes) min pause (minimum \(pauseDeviceActivityMinimumMinutes) min required). Using BGTask + notification fallback."
+      )
+      return
+    }
 
     let center = DeviceActivityCenter()
     let pauseTimerActivity = PauseTimerActivity()
@@ -148,7 +159,7 @@ class DeviceActivityCenterUtil {
     do {
       stopActivities(for: [deviceActivityName])
       try center.startMonitoring(deviceActivityName, during: deviceActivitySchedule)
-      print("Scheduled pause timer activity for \(minutes) min")
+      print("Scheduled pause timer activity for \(minutes) min (DeviceActivity)")
     } catch {
       print("Failed to start pause timer activity: \(error.localizedDescription)")
     }

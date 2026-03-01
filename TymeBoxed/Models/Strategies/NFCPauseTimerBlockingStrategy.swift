@@ -115,7 +115,8 @@ class NFCPauseTimerBlockingStrategy: BlockingStrategy {
           ) ?? pauseStartTime
           self.timersUtil.schedulePauseEndTask(
             profileId: session.blockedProfile.id.uuidString,
-            endDate: endDate
+            endDate: endDate,
+            profileName: session.blockedProfile.name
           )
           self.onSessionCreation?(.paused)
         }
