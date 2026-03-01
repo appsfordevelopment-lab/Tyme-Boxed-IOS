@@ -229,12 +229,10 @@ class TimersUtil {
     backgroundTasks = tasks
   }
 
-  static let pauseEndNotificationIdentifierPrefix = "pauseEndNotification:"
-
-  /// Schedules a background task and notification to re-block when the pause timer expires.
+  /// Schedules background tasks to re-block when the pause timer expires.
   /// Uses chained scheduling: first check in 1 min, then reschedule until pause ends.
   /// iOS is more likely to run tasks requested for the near future.
-  /// Also schedules a "break over" notification - when user opens the app from it, fallback re-blocks.
+  /// Schedules a "break over" notification - when user taps it, app opens and fallback re-blocks.
   func schedulePauseEndTask(
     profileId: String,
     endDate: Date,
@@ -262,15 +260,13 @@ class TimersUtil {
     } catch {
       print("[PauseTimer] Could not schedule BGAppRefresh: \(error)")
     }
-
   }
 
-  /// Cancels the pause-end background task and notification. Call when user ends pause early via NFC.
-  func cancelPauseEndTask(profileId: String) {
-    cancelBackgroundTask(taskId: Self.pauseEndTaskPrefix + profileId)
-    cancelNotification(identifier: Self.pauseEndNotificationIdentifierPrefix + profileId)
+  /// Cancels the pause-end background task. Call when user ends pause early via NFC.
+  static func cancelPauseEndTask(profileId: String) {
+    TimersUtil().cancelBackgroundTask(taskId: pauseEndTaskPrefix + profileId)
     BGTaskScheduler.shared.cancel(
-      taskRequestWithIdentifier: Self.pauseEndRecoveryTaskIdentifier
+      taskRequestWithIdentifier: pauseEndRecoveryTaskIdentifier
     )
   }
 

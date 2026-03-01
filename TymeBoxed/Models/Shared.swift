@@ -195,4 +195,9 @@ enum SharedData {
   static func setEndTime(date: Date) {
     activeSharedSession?.endTime = date
   }
+
+  /// Forces persistence to disk. Call after critical writes when app may be killed (e.g. pause start).
+  static func synchronize() {
+    suite.synchronize()
+  }
 }

@@ -6,11 +6,11 @@ struct OTPScreen: View {
   let onVerificationSuccess: () -> Void
   let onDismiss: () -> Void
 
-  @State private var otpDigits: [String] = Array(repeating: "", count: 6)
+  @State private var otpCode: String = ""
   @State private var showContent: Bool = false
   @StateObject private var authManager = AuthenticationManager.shared
   @State private var errorMessage: String? = nil
-  @FocusState private var focusedIndex: Int?
+  @FocusState private var isFocused: Bool
 
   var body: some View {
     ZStack {
@@ -46,13 +46,36 @@ struct OTPScreen: View {
             .padding(.top, 20)
             .padding(.bottom, 40)
 
-          // OTP Input Fields
-          HStack(spacing: 12) {
-            ForEach(0..<6, id: \.self) { index in
-              otpField(at: index)
+          // OTP Input - single TextField for native backspace support
+          ZStack(alignment: .leading) {
+            HStack(spacing: 12) {
+              ForEach(0..<6, id: \.self) { index in
+                otpDigitBox(at: index)
+              }
             }
+            .padding(.horizontal, 20)
+            .contentShape(Rectangle())
+            .onTapGesture {
+              isFocused = true
+            }
+
+            TextField("", text: Binding(
+              get: { otpCode },
+              set: { newValue in
+                let filtered = String(newValue.filter { $0.isNumber }.prefix(6))
+                otpCode = filtered
+              }
+            ))
+              .keyboardType(.numberPad)
+              .textContentType(.oneTimeCode)
+              .multilineTextAlignment(.center)
+              .font(.system(size: 24, weight: .bold))
+              .foregroundColor(.clear)
+              .focused($isFocused)
+              .frame(maxWidth: .infinity)
+              .frame(height: 60)
+              .padding(.horizontal, 20)
           }
-          .padding(.horizontal, 20)
           .padding(.bottom, 16)
 
           // Instruction text
@@ -134,94 +157,40 @@ struct OTPScreen: View {
     }
   }
 
-  private func otpField(at index: Int) -> some View {
-    let isFocused = focusedIndex == index
-    let shouldShowBorder = isFocused
+  private func otpDigitBox(at index: Int) -> some View {
+    let digit = index < otpCode.count ? String(otpCode[otpCode.index(otpCode.startIndex, offsetBy: index)]) : ""
+    let currentBoxIndex = min(otpCode.count, 5)
+    let shouldShowBorder = isFocused && index == currentBoxIndex
 
-    return TextField("", text: Binding(
-      get: { otpDigits[index] },
-      set: { newValue in
-        let filtered = newValue.filter { $0.isNumber }
-        
-        // Prevent unnecessary updates if value hasn't changed
-        guard filtered != otpDigits[index] else { return }
-
-        if filtered.isEmpty {
-          // Backspace: clear current field and move to previous so user can keep deleting
-          otpDigits[index] = ""
-          if index > 0 && focusedIndex == index {
-            // Use a small delay to prevent rapid focus changes
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-              focusedIndex = index - 1
-            }
-          }
-        } else if filtered.count == 1 {
-          // Single digit: set and move to next
-          otpDigits[index] = filtered
-          if index < 5 {
-            // Use a small delay to prevent rapid focus changes
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-              if focusedIndex == index {
-                focusedIndex = index + 1
-              }
-            }
-          } else if index == 5 {
-            // Last field filled, remove focus after a delay
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-              focusedIndex = nil
-            }
-          }
-        } else {
-          // Paste or autofill: distribute digits across fields
-          let digits = Array(filtered.prefix(6)).map { String($0) }
-          // Update all fields in a single batch
-          for (i, digit) in digits.enumerated() where i < 6 {
-            otpDigits[i] = digit
-          }
-          let nextEmpty = digits.count
-          DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-            focusedIndex = nextEmpty < 6 ? nextEmpty : nil
-          }
-        }
-      }
-    ))
-    .keyboardType(.numberPad)
-    .textContentType(.oneTimeCode)
-    .multilineTextAlignment(.center)
-    .font(.system(size: 24, weight: .bold))
-    .foregroundColor(.primary)
-    .focused($focusedIndex, equals: index)
-    .frame(width: 50, height: 60)
-    .background(
-      RoundedRectangle(cornerRadius: 12)
-        .fill(Color(uiColor: .tertiarySystemFill))
-        .overlay(
-          RoundedRectangle(cornerRadius: 12)
-            .stroke(shouldShowBorder ? Color.primary : Color.clear, lineWidth: 1)
-        )
-    )
-    .onTapGesture {
-      focusedIndex = index
-    }
+    return Text(digit)
+      .font(.system(size: 24, weight: .bold))
+      .foregroundColor(.primary)
+      .frame(width: 50, height: 60)
+      .background(
+        RoundedRectangle(cornerRadius: 12)
+          .fill(Color(uiColor: .tertiarySystemFill))
+          .overlay(
+            RoundedRectangle(cornerRadius: 12)
+              .stroke(shouldShowBorder ? Color.primary : Color.clear, lineWidth: 1)
+          )
+      )
   }
 
   private func handleAppear() {
     withAnimation(.easeOut(duration: 0.3)) {
       showContent = true
     }
-    // Focus on first field to open keyboard
     DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-      focusedIndex = 0
+      isFocused = true
     }
   }
 
   private func isOTPComplete() -> Bool {
-    return otpDigits.allSatisfy { !$0.isEmpty }
+    return otpCode.count == 6
   }
 
   private func verifyOTP() async {
     errorMessage = nil
-    let otpCode = otpDigits.joined()
     
     let isValid = await authManager.verifyOTP(otpCode)
     
@@ -229,9 +198,8 @@ struct OTPScreen: View {
       onVerificationSuccess()
     } else {
       errorMessage = authManager.errorMessage ?? "Invalid OTP. Please try again."
-      // Clear OTP fields on error
-      otpDigits = Array(repeating: "", count: 6)
-      focusedIndex = 0
+      otpCode = ""
+      isFocused = true
     }
   }
 
@@ -244,9 +212,8 @@ struct OTPScreen: View {
     await authManager.sendOTP(email: email, phone: phone)
     
     if authManager.otpSent {
-      // Clear OTP fields
-      otpDigits = Array(repeating: "", count: 6)
-      focusedIndex = 0
+      otpCode = ""
+      isFocused = true
     } else {
       errorMessage = authManager.errorMessage ?? "Failed to resend OTP. Please try again."
     }

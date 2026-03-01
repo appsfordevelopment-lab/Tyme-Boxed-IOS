@@ -49,7 +49,7 @@ class ThemeManager: ObservableObject {
 
 extension Color {
   /// Light red used for emergency access buttons.
-  static let emergencyLightRed = Color(red: 1.0, green: 0.35, blue: 0.35)
+  static let emergencyLightRed = Color(red: 1.0, green: 0.45, blue: 0.45)
 
   init(hex: String) {
     let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)

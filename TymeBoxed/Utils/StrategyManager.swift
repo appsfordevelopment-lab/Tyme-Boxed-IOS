@@ -64,6 +64,24 @@ class StrategyManager: ObservableObject {
     activeSession = getActiveSession(context: context)
 
     if activeSession?.isActive == true {
+      // Immediate check: if pause is overdue, re-block before starting timer.
+      // Handles extension/bg-task failures when app was backgrounded or terminated.
+      if let session = activeSession, session.isPauseActive {
+        let pauseDuration = getPauseDurationInSeconds(for: session.blockedProfile)
+        if let pauseStart = session.pauseStartTime,
+          Date().timeIntervalSince(pauseStart) >= pauseDuration,
+          SharedData.getActiveSharedSession()?.pauseEndTime == nil
+        {
+          SharedData.setPauseEndTime(date: Date())
+          session.pauseEndTime = Date()
+          try? context.save()
+          appBlocker.activateRestrictions(for: BlockedProfiles.getSnapshot(for: session.blockedProfile))
+          DeviceActivityCenterUtil.removePauseTimerActivity(for: session.blockedProfile)
+          TimersUtil.cancelPauseEndTask(profileId: session.blockedProfile.id.uuidString)
+          NotificationCenter.default.post(name: .strategyManagerPauseEnded, object: nil)
+        }
+      }
+
       startTimer()
 
       // Start live activity for existing session if one exists

@@ -137,12 +137,14 @@ class DeviceActivityCenterUtil {
     let deviceActivityName = pauseTimerActivity.getDeviceActivityName(
       from: profile.id.uuidString)
 
-    let (intervalStart, intervalEnd) = getPauseTimeIntervalStartAndEnd(from: minutes)
+    let (intervalStart, intervalEnd, warningTime) =
+      getPauseTimeIntervalStartAndEnd(from: minutes)
 
     let deviceActivitySchedule = DeviceActivitySchedule(
       intervalStart: intervalStart,
       intervalEnd: intervalEnd,
-      repeats: false
+      repeats: false,
+      warningTime: warningTime
     )
 
     do {
@@ -228,19 +230,28 @@ class DeviceActivityCenterUtil {
     return (intervalStart: intervalStart, intervalEnd: intervalEnd)
   }
 
+  /// DeviceActivitySchedule requires minimum 15 min interval. For shorter pauses,
+  /// use 15 min interval + warningTime so intervalWillEndWarning fires at actual pause end.
   private static func getPauseTimeIntervalStartAndEnd(from minutes: Int) -> (
-    intervalStart: DateComponents, intervalEnd: DateComponents
+    intervalStart: DateComponents,
+    intervalEnd: DateComponents,
+    warningTime: DateComponents?
   ) {
     let calendar = Calendar.current
     let now = Date()
     let effectiveMinutes = max(minutes, 1)
+
+    let intervalMinutes = max(effectiveMinutes, 15)
+
     guard let intervalEndDate = calendar.date(
       byAdding: .minute,
-      value: effectiveMinutes,
+      value: intervalMinutes,
       to: now
     ) else {
-      return getTimeIntervalStartAndEnd(from: minutes)
+      let (start, end) = getTimeIntervalStartAndEnd(from: minutes)
+      return (intervalStart: start, intervalEnd: end, warningTime: nil)
     }
+
     let intervalStart = calendar.dateComponents(
       [.year, .month, .day, .hour, .minute, .second],
       from: now
@@ -249,6 +260,12 @@ class DeviceActivityCenterUtil {
       [.year, .month, .day, .hour, .minute, .second],
       from: intervalEndDate
     )
-    return (intervalStart: intervalStart, intervalEnd: intervalEnd)
+
+    let warningTime: DateComponents? =
+      effectiveMinutes < 15
+      ? DateComponents(minute: intervalMinutes - effectiveMinutes)  // re-block at pause end
+      : nil
+
+    return (intervalStart: intervalStart, intervalEnd: intervalEnd, warningTime: warningTime)
   }
 }

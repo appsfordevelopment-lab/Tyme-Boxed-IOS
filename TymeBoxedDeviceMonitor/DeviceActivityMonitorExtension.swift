@@ -36,4 +36,11 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
     log.info("intervalDidEnd for activity: \(activity.rawValue)")
     TimerActivityUtil.stopTimerActivity(for: activity)
   }
+
+  override func intervalWillEndWarning(for activity: DeviceActivityName) {
+    super.intervalWillEndWarning(for: activity)
+
+    log.info("intervalWillEndWarning for activity: \(activity.rawValue)")
+    TimerActivityUtil.stopTimerActivity(for: activity)
+  }
 }

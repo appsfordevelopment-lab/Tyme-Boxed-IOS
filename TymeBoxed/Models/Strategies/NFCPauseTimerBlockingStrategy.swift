@@ -88,7 +88,7 @@ class NFCPauseTimerBlockingStrategy: BlockingStrategy {
         }
 
         if isPauseActive {
-          self.timersUtil.cancelPauseEndTask(profileId: session.blockedProfile.id.uuidString)
+          TimersUtil.cancelPauseEndTask(profileId: session.blockedProfile.id.uuidString)
           DeviceActivityCenterUtil.removePauseTimerActivity(for: session.blockedProfile)
           session.endSession()
           try? context.save()
@@ -104,6 +104,7 @@ class NFCPauseTimerBlockingStrategy: BlockingStrategy {
           session.pauseEndTime = nil
           try? context.save()
           self.appBlocker.deactivateRestrictions()
+          SharedData.synchronize()
           DeviceActivityCenterUtil.startPauseTimerActivity(for: session.blockedProfile)
           let pauseData = session.blockedProfile.strategyData.map {
             StrategyPauseTimerData.toStrategyPauseTimerData(from: $0)
