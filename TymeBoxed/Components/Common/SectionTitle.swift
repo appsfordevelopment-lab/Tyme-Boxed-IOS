@@ -5,15 +5,20 @@ struct SectionTitle: View {
   let buttonText: String?
   let buttonAction: (() -> Void)?
   let buttonIcon: String?
+  let buttonBackgroundColor: Color?
+  let buttonTextColor: Color?
 
   init(
     _ title: String, buttonText: String? = nil, buttonAction: (() -> Void)? = nil,
-    buttonIcon: String? = nil
+    buttonIcon: String? = nil, buttonBackgroundColor: Color? = nil,
+    buttonTextColor: Color? = nil
   ) {
     self.title = title
     self.buttonText = buttonText
     self.buttonAction = buttonAction
     self.buttonIcon = buttonIcon
+    self.buttonBackgroundColor = buttonBackgroundColor
+    self.buttonTextColor = buttonTextColor
   }
 
   var body: some View {
@@ -26,7 +31,13 @@ struct SectionTitle: View {
       Spacer()
 
       if let buttonText = buttonText, let buttonAction = buttonAction {
-        RoundedButton(buttonText, action: buttonAction, iconName: buttonIcon)
+        RoundedButton(
+          buttonText,
+          action: buttonAction,
+          backgroundColor: buttonBackgroundColor ?? Color.secondary.opacity(0.2),
+          textColor: buttonTextColor ?? .gray,
+          iconName: buttonIcon
+        )
       }
     }
     .padding(.bottom, 10)

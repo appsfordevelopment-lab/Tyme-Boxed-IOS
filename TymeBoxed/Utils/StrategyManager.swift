@@ -122,6 +122,7 @@ class StrategyManager: ObservableObject {
           SharedData.getActiveSharedSession()?.pauseEndTime == nil
         {
           SharedData.setPauseEndTime(date: Date())
+          session.pauseEndTime = Date()
           self.appBlocker.activateRestrictions(
             for: BlockedProfiles.getSnapshot(for: session.blockedProfile))
           DeviceActivityCenterUtil.removePauseTimerActivity(for: session.blockedProfile)

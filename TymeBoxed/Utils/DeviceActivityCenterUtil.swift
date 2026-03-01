@@ -124,10 +124,6 @@ class DeviceActivityCenterUtil {
     stopActivities(for: strategyTimerActivities, with: center)
   }
 
-  /// Minimum pause duration (minutes) required by DeviceActivitySchedule.
-  /// Intervals shorter than this fail with intervalTooShort and never fire intervalDidEnd.
-  private static let pauseDeviceActivityMinimumMinutes = 15
-
   static func startPauseTimerActivity(for profile: BlockedProfiles) {
     guard let strategyData = profile.strategyData else {
       print("No strategy data found for pause timer in profile: \(profile.id.uuidString)")
@@ -135,13 +131,6 @@ class DeviceActivityCenterUtil {
     }
     let pauseData = StrategyPauseTimerData.toStrategyPauseTimerData(from: strategyData)
     let minutes = pauseData.pauseDurationInMinutes
-
-    guard minutes >= pauseDeviceActivityMinimumMinutes else {
-      print(
-        "[PauseTimer] Skipping DeviceActivity for \(minutes) min pause (minimum \(pauseDeviceActivityMinimumMinutes) min required). Using BGTask + notification fallback."
-      )
-      return
-    }
 
     let center = DeviceActivityCenter()
     let pauseTimerActivity = PauseTimerActivity()
@@ -253,11 +242,11 @@ class DeviceActivityCenterUtil {
       return getTimeIntervalStartAndEnd(from: minutes)
     }
     let intervalStart = calendar.dateComponents(
-      [.year, .month, .day, .hour, .minute],
+      [.year, .month, .day, .hour, .minute, .second],
       from: now
     )
     let intervalEnd = calendar.dateComponents(
-      [.year, .month, .day, .hour, .minute],
+      [.year, .month, .day, .hour, .minute, .second],
       from: intervalEndDate
     )
     return (intervalStart: intervalStart, intervalEnd: intervalEnd)

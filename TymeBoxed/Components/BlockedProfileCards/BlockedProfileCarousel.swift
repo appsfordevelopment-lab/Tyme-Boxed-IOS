@@ -129,7 +129,9 @@ struct BlockedProfileCarousel: View {
       titleMessage,
       buttonText: actionButtonText,
       buttonAction: { actionButtonAction() },
-      buttonIcon: actionButtonIcon
+      buttonIcon: actionButtonIcon,
+      buttonBackgroundColor: isBlocking ? Color.emergencyLightRed : nil,
+      buttonTextColor: isBlocking ? .white : nil
     )
     .padding(.horizontal, 16)
   }

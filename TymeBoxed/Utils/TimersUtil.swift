@@ -263,16 +263,6 @@ class TimersUtil {
       print("[PauseTimer] Could not schedule BGAppRefresh: \(error)")
     }
 
-    let secondsUntilEnd = endDate.timeIntervalSince(Date())
-    if secondsUntilEnd > 1 {
-      let notificationId = Self.pauseEndNotificationIdentifierPrefix + profileId
-      scheduleNotification(
-        title: "Break over!",
-        message: "Open Tyme Boxed to resume blocking\(profileName.map { " for \($0)" } ?? "").",
-        seconds: secondsUntilEnd,
-        identifier: notificationId
-      )
-    }
   }
 
   /// Cancels the pause-end background task and notification. Call when user ends pause early via NFC.

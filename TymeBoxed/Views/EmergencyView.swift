@@ -141,7 +141,7 @@ struct EmergencyView: View {
       BreakGlassButton(tapsToShatter: 3) {
         ActionButton(
           title: "Emergency Unblock",
-          backgroundColor: .red,
+          backgroundColor: .emergencyLightRed,
           iconName: "exclamationmark.triangle.fill",
           iconColor: .white,
           isLoading: isPerformingEmergencyUnblock,

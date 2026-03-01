@@ -52,7 +52,10 @@ struct RoundedButton: View {
       .padding(.horizontal, 12)
       .padding(.vertical, 8)
       .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-      .glassButtonBackground(cornerRadius: 16)
+      .background(
+        RoundedRectangle(cornerRadius: 16, style: .continuous)
+          .fill(backgroundColor)
+      )
       .overlay(
         RoundedRectangle(cornerRadius: 16, style: .continuous)
           .strokeBorder(.white.opacity(0.15))
